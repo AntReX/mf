@@ -50,19 +50,54 @@
    * proti sobě: každý příhoz je vidět a ostatní mají čas reagovat.
    */
   const OKNO_MS = 3 * 60 * 1000;
-  /* Minimální přebití. Hra minimum neuvádí, z pravidel plyne „o korunu víc“. */
-  const PRIHOZ = 1;
+  /*
+   * !!! MINIMÁLNÍ PŘEBITÍ JE 2 % Z ČÁSTKY, NE KORUNA !!!
+   * Dřív tu bylo `+1` s odůvodněním „z pravidel plyne, že stačí o korunu víc“.
+   * To byl odhad z textu pravidel („předmět získá ten, kdo vsadí nejvíc“) a byl
+   * špatný – hra vyžaduje o 2 % vyšší nabídku. Nižší příhoz neprojde, takže by
+   * hlídka klikala naprázdno až do konce dražby.
+   *
+   * Zaokrouhluje se NAHORU a na celé koruny: pole má sice step 0.01, ale
+   * s haléři se tady už jednou ztrácely peníze (viz upgrade.js).
+   */
+  const PRIHOZ_PCT = 2;
+  const prihozZ = cena => Math.ceil(cena * (1 + PRIHOZ_PCT / 100));
 
   const data = () => NS.store.get().aukce || {};
   const zaznam = id => data()[id] || {};
 
-  /** Identita dražby z adresy tlačítka (`…/auctionSpecial/bid/666` → „666“). */
+  /*
+   * !!! DIAMANTOVÁ AUKCE SE NEŘEŠÍ !!!
+   * Na stránce jsou TŘI druhy dražeb a poznají se jedině z adresy tlačítka:
+   *   /map/building/auction/bid/32038         předměty          ← ANO
+   *   /map/building/auctionSpecial/bid/666    speciální předmět ← ANO
+   *   /map/building/pointsAuction/bid/12486   DIAMANTY          ← NE
+   * Diamanty (v DOM „points“) se přihazovat nemají, tak je hlídka úplně přeskočí
+   * – nedostanou ani pole na strop.
+   */
+  const DRUHY = ['auction', 'auctionSpecial'];
+
+  /**
+   * Identita dražby z adresy tlačítka: `…/auction/bid/32038` → „auction:32038“.
+   * `null` u diamantů a u čehokoli, co neumíme zařadit.
+   *
+   * Druh je součástí klíče schválně: `pointsAuction/bid/12486` a
+   * `auction/bid/12486` jsou dvě různé dražby se stejným číslem, a kdyby se
+   * ukládaly pod totéž, zdědila by jedna „moje nabídka“ od druhé.
+   */
   function lotId(item) {
     const b = item.querySelector(BID);
     const a = b ? (b.getAttribute('action') || '') : '';
-    const m = a.match(/\/bid\/(\w+)/);
-    return m ? m[1] : null;
+    const m = a.match(/\/map\/building\/(\w+)\/bid\/(\w+)/);
+    if (!m || !DRUHY.includes(m[1])) return null;
+    return m[1] + ':' + m[2];
   }
+
+  /** Je to diamantová dražba? Jen pro hlášku, ať je poznat, proč se nic nedělá. */
+  const jeDiamantova = item => {
+    const b = item.querySelector(BID);
+    return /\/pointsAuction\/bid\//.test(b ? (b.getAttribute('action') || '') : '');
+  };
 
   /**
    * Zbývající čas v ms. Bere se `data-time` (sekundy s desetinami) – odpočet po
@@ -78,6 +113,22 @@
     };
     const t = kus('.hours') * 3600 + kus('.minutes') * 60 + kus('.seconds');
     return t ? t * 1000 : null;
+  }
+
+  /**
+   * Denní limit příhozů. Hra ho píše jako „Můžeš přihazovat v aukcích 4/4 krát
+   * denně“.
+   *
+   * !!! NEVÍM, JESTLI JE PRVNÍ ČÍSLO „ZBÝVÁ“ NEBO „UTRACENO“ !!!
+   * Obojí se dá přečíst stejně a spletená interpretace by hlídku buď zbytečně
+   * vypnula, nebo naopak nechala klikat naprázdno. Proto se limit jen UKAZUJE
+   * a o ničem nerozhoduje – když je vyčerpaný, hra příhoz odmítne a ověření
+   * v `prihod()` to pozná. Až se to změří, dá se z toho udělat podmínka.
+   */
+  function limitDne() {
+    const t = (document.body ? document.body.textContent : '').replace(/\s+/g, ' ');
+    const m = t.match(/přihazovat v aukcích\s*(\d+)\s*\/\s*(\d+)\s*krát denně/i);
+    return m ? { prvni: +m[1], celkem: +m[2], text: m[1] + '/' + m[2] } : null;
   }
 
   const spinave = () => {
@@ -118,6 +169,8 @@
   /** Přidá k jedné položce lištu s nabídkami hodnot. */
   function decorate(item) {
     if (item.dataset[MARK]) return;
+    /* diamantová dražba: ani pole na strop – tady se přihazovat nemá */
+    if (jeDiamantova(item)) { item.dataset[MARK] = 'diamanty'; return; }
     const input = item.querySelector(INPUT);
     const bid = currentBid(item);
     if (!input || bid == null) return;
@@ -136,8 +189,13 @@
      * „+1“ tady bylo, ale zrušené je záměrně: minimální přebití dělá hlídka sama
      * a ručně je užitečnější rezerva proti dalšímu přihazujícímu.
      */
-    bar.appendChild(button('+1 %', '+1 % (' + F.kc(bid * 1.01) + ')', () => fill(input, bid * 1.01)));
-    bar.appendChild(button('+5 %', '+5 % (' + F.kc(bid * 1.05) + ')', () => fill(input, bid * 1.05)));
+    /*
+     * +2 % je MINIMUM, které hra přijme – proto je tu místo dřívějšího +1 %,
+     * které by odmítla.
+     */
+    bar.appendChild(button('+2 %', 'minimum, které hra přijme ('
+      + F.kc(prihozZ(bid)) + ')', () => fill(input, prihozZ(bid))));
+    bar.appendChild(button('+5 %', '+5 % (' + F.kc(bid * 1.05) + ')', () => fill(input, Math.ceil(bid * 1.05))));
 
     /*
      * Strop pro automatické přihazování. Je to pole u KONKRÉTNÍ dražby, ne
@@ -213,7 +271,7 @@
     if (veduJa(id, cena)) {
       return { co: 'vedu', text: 'vedeš ' + NS.fmt.kc(cena, { short: true }) };
     }
-    const cil = Math.floor(cena) + PRIHOZ;
+    const cil = prihozZ(cena);
     if (cil > strop) {
       return { co: 'strop', cil,
         text: 'nad strop (' + NS.fmt.kc(cil, { short: true }) + ' > '
@@ -230,7 +288,10 @@
       return { co: 'penize', cil,
         text: 'chybí špinavé (' + NS.fmt.kc(cil, { short: true }) + ')' };
     }
-    return { co: 'prihodit', cil, cas, text: 'přihazuji ' + NS.fmt.kc(cil, { short: true }) };
+    const l = limitDne();
+    return { co: 'prihodit', cil, cas,
+      text: 'přihodí ' + NS.fmt.kc(cil, { short: true }) + ' (+' + PRIHOZ_PCT + ' %)'
+        + (l ? ' · denní limit ' + l.text : '') };
   }
 
   /** Napíše k položce, co se děje – bez toho by hlídka byla neviditelná. */
@@ -351,6 +412,7 @@
     obs.observe(document.body, { childList: true, subtree: true });
   }
 
-  NS.auction = { start, scan, currentBid, lotId, zbyva, veduJa, rozhodni, prihod,
-    kolo, KONTROLA_MS, OKNO_MS, PRIHOZ };
+  NS.auction = { start, scan, currentBid, lotId, jeDiamantova, zbyva, veduJa,
+    rozhodni, prihod, kolo, limitDne, prihozZ,
+    KONTROLA_MS, OKNO_MS, PRIHOZ_PCT, DRUHY };
 })();

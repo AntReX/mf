@@ -6,6 +6,21 @@ Verze se drží v `extension/manifest.json`; nejvyšší číslo tady mu musí o
 Záznamy začínají u 1.13.0 – od starších verzí se nevedly, takže dopisovat je
 zpětně by znamenalo si je domyslet.
 
+## 1.23.0
+
+- **Minimální příhoz v aukci je 2 % z částky, ne koruna.** Dřív tu bylo „+1“
+  s odůvodněním, že z pravidel plyne „o korunu víc“ – byl to odhad a byl špatný.
+  Hlídka by klikala naprázdno až do konce dražby. Ruční `+1 %` proto nahrazeno
+  za `+2 %` (minimum, které hra přijme).
+- **Diamantová aukce se neřeší.** Na stránce jsou tři druhy dražeb a poznají se
+  jedině z adresy: `auction` a `auctionSpecial` jsou předměty, `pointsAuction`
+  jsou diamanty. Do těch se nepřihazuje a nedostanou ani pole na strop.
+- **Klíč dražby nese i druh** (`auction:32038`). `pointsAuction/bid/12486`
+  a `auction/bid/12486` jsou dvě různé dražby se stejným číslem – pod jedním
+  klíčem by si zdědily „moji nabídku“.
+- Denní limit příhozů („Můžeš přihazovat v aukcích 4/4 krát denně“) se ukazuje,
+  ale nerozhoduje: není poznat, jestli první číslo je „zbývá“ nebo „utraceno“.
+
 ## 1.22.1
 
 - **Hvězdička rozhodila inventář.** Dostala `position: relative` na
