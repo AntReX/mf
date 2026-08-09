@@ -365,6 +365,20 @@
      * kus je `data-item-id` z inventáře. Aukce a inventář se spojit nedají
      * (aukce `data-item-id` nemá), takže cena se ke kusu přiřazuje ručně.
      */
+    /*
+     * Aukce (#2): strop pro automatické přihazování a vlastní poslední nabídka,
+     * podle dražby (`{ [lotId]: { strop, moje, at } }`). Vlastní nabídka se musí
+     * pamatovat, protože hra NEUKAZUJE, kdo vede – viz auction.js.
+     */
+    aukce: {},
+
+    /*
+     * ★ oblíbené předměty (`{ [dataItemId]: { master, nazev, obrazek, at } }`).
+     * Hra oblíbené nemá – `.stars` v inventáři je vzácnost – takže je to značka
+     * rozšíření. Viz oblibene.js.
+     */
+    oblibene: {},
+
     market: { produkty: {} },
 
     /*
@@ -425,6 +439,9 @@
      * Závody 28, Kasárna 20). Platí se ČISTÝMI penězi z hotovosti, která bývá
      * skoro nulová – takže si automatika sáhne do banky. Viz upgrade.js.
      */
+    /* řádek „Oblíbené“ v liště (★ předměty z inventáře) */
+    favBar: true,
+
     upgBar: true,
     upgAuto: false,
     upgMaxCena: 0,           // strop na jedno vylepšení (0 = bez omezení)

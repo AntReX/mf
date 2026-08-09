@@ -6,6 +6,17 @@ Verze se drží v `extension/manifest.json`; nejvyšší číslo tady mu musí o
 Záznamy začínají u 1.13.0 – od starších verzí se nevedly, takže dopisovat je
 zpětně by znamenalo si je domyslet.
 
+## 1.22.0
+
+- **Aukce: pole „přihazovat do“** u každé dražby. Hlídka kontroluje každých 30 s
+  a přihodí o korunu, když už nevedeš a do konce zbývá méně než 3 minuty. Nikdy
+  nepřehodí strop. Tlačítko `+1` zrušeno – minimální přebití dělá hlídka.
+  Hra NEUKAZUJE, kdo vede, takže se to odvozuje z vlastní poslední nabídky.
+- **★ oblíbené předměty** v inventáři (hra oblíbené nemá, `.stars` je vzácnost)
+  a řádek `Oblíbené:` v liště: jeden klik = jedno běžné vylepšení předmětu,
+  s ověřením, že úroveň nebo kvalita opravdu stoupla. **Turbo za diamanty se
+  nepoužívá** (4 800 / 24 000 / 48 000 💎) a hlídá to i test nad zdrojákem.
+
 ## 1.21.0
 
 - **Lišta se nedá zavřít, jen zmenšit.** Křížek „×“ zmizel – sedělo hned vedle

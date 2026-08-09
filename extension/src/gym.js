@@ -1161,6 +1161,9 @@
     const vylep = modulRow(NS.upgrade, cfg2.upgBar !== false,
       'Vylepšit:', 'cmc-gym-upg-row', collect);
     if (vylep) rows.push(vylep);
+    const fav = modulRow(NS.oblibene, cfg2.favBar !== false,
+      'Oblíbené:', 'cmc-gym-fav-row', collect);
+    if (fav) rows.push(fav);
     // zločiny vracejí DVA řádky (je jich dvacet) – rozbalit stejně jako flotilu
     if (cfg.crimeBar !== false && NS.crimes) rows.push(...[].concat(NS.crimes.row(collect) || []));
     if (cfg.casinoBar === true && NS.casino) rows.push(NS.casino.row(collect));

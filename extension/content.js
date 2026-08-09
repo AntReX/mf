@@ -34,7 +34,8 @@
     NS.panel.build();
     NS.panel.rescheduleAuto();
     NS.auction.start();       // vyplňování sázky v aukci (nic neodesílá)
-    NS.gym.start();           // tlačítka posilovny do lišty (jen přemístění)
+    NS.gym.start();
+    NS.oblibene.start();      // ★ v inventáři (značka rozšíření, hra ji nemá)           // tlačítka posilovny do lišty (jen přemístění)
     NS.uspor.start();         // vypínání nekonečných animací hry (šetří baterii)
     NS.reload.start();        // noční obnovování stránky (zaseknutá hra se rozjede)
     // uložené termíny výroben – bez toho by se po každém reloadu čtly všechny znovu

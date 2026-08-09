@@ -1267,3 +1267,49 @@ a.cmc-atk-offscreen { position: absolute !important; left: -9999px !important; t
   font-weight: 700;
   white-space: nowrap;
 }
+
+/* ---- aukce: strop pro automatické přihazování ------------------------------ */
+.cmc-bid-stitek { margin-left: 8px; color: #b39c86; font-size: 11px; }
+.cmc-bid-strop {
+  width: 92px;
+  padding: 1px 4px;
+  font: inherit;
+  font-size: 11px;
+  color: #f4e9d8;
+  background: #241612;
+  border: 1px solid #4a251d;
+  border-radius: 4px;
+}
+.cmc-bid-strop:focus { border-color: #d4a13a; outline: none; }
+/* stav hlídky u položky – bez něj by nebylo poznat, proč se (ne)přihazuje */
+.cmc-bid-stav { margin-left: 6px; font-size: 11px; color: #b39c86; }
+.cmc-bid-stav.cmc-bid-vedu { color: #62d3ab; }
+.cmc-bid-stav.cmc-bid-blok { color: #e6a067; }
+
+/* ---- ★ oblíbené předměty --------------------------------------------------- */
+/*
+ * Hvězdička sedí v rohu karty, ne u akcí „nasadit/prodat/do aukce“ – tam by se
+ * s nimi pletla a omylem se klikne na prodej.
+ */
+.cmc-fav {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  z-index: 5;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  font-size: 15px;
+  line-height: 1;
+  color: #8f7c68;
+  background: rgba(28, 17, 14, 0.72);
+  border: 1px solid #4a251d;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.cmc-fav:hover { color: #f0c268; border-color: #d4a13a; }
+.cmc-fav-on { color: #f0c268; border-color: #d4a13a; }
+/* karta musí být vztažný rámec, jinak by hvězdička odplula k okraji stránky */
+.col[data-item-id] .col-card-inner { position: relative; }
+#cmc-gym-bar .cmc-fav-btn { background: #2e2216; border-color: #5a4520; }
+#cmc-gym-bar .cmc-fav-btn:hover:not(:disabled) { border-color: #d4a13a; }

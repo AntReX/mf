@@ -1,22 +1,36 @@
 /* =============================================================================
- * auction.js – pomocník pro vyplnění sázky v aukci (budova #2)
+ * auction.js – aukce (#2): pomocník pro vyplnění sázky + automatické přihazování
  *
- * !!! HRANICE !!!
- * Tohle je jediné místo, kde rozšíření něco ZAPISUJE do stránky hry – vloží
- * číslo do pole „Tvá sázka?“. Nic neposílá: na tlačítko „Nabídnout cenu“
- * (`.bidAuction`) se nikdy nesahá, odeslání i rozhodnutí zůstává na hráči.
- * Kdyby se to mělo změnit, byla by to už automatizace, a tu tenhle nástroj
- * záměrně nedělá.
+ * !!! HRANICE SE ZMĚNILA – PŘEČTI SI TO !!!
+ * Dřív tu stálo, že se na „Nabídnout cenu“ (`.bidAuction`) NIKDY nesahá a že
+ * odeslání zůstává na hráči. To už neplatí: na výslovné zadání tu je hlídka,
+ * která umí přihodit sama. Platí ale tři pojistky, bez kterých by to byla
+ * sázkařská mašina:
+ *   1. přihazuje se JEN u položek, kde je ručně nastavený STROP,
+ *   2. nikdy se nepřehodí strop – ani o korunu,
+ *   3. přihazuje se jen v posledních minutách a jen když nevedeš.
  *
- * Struktura položky ve hře:
- *   .static-inv.holder
- *     .auction-price .sum .pretty-points-value  → "17 000 000Kč" (špinavé peníze)
- *     input[name="amount"]                      → pole pro sázku
- *     [action=…/bidAuction] .bidAuction         → odeslání (NESAHAT)
+ * ---------------------------------------------------------------------------
+ * CO SE DALO ZMĚŘIT (živá hra, 9. 8. 2026) A CO NE
  *
- * Minimální příhoz hra nikde neuvádí; z pravidel („předmět získá ten, kdo vsadí
- * nejvíc“) plyne, že stačí o korunu víc – proto tlačítko +1 Kč. Procenta jsou
- * pro případ, že chceš mít rezervu proti dalšímu přihazujícímu.
+ * Položka `.static-inv.holder`:
+ *   .auction-price .sum        → „200 000 987Kč“ (ŠPINAVÉ peníze)
+ *   data-time="10149.178005"   → zbývající SEKUNDY; přesnější než odpočet
+ *   .time .timer-down          → tentýž čas po číslicích (.hours/.minutes/.seconds)
+ *   input[name=amount]         → pole pro sázku (step 0.01)
+ *   button.bidAuction[action=…/map/building/auctionSpecial/bid/666]
+ *                              → odeslání; z adresy se bere IDENTITA dražby
+ *
+ * !!! HRA NEUKAZUJE, KDO VEDE !!!
+ * Ve výpisu není žádné jméno – ani tvoje. „Vedu?“ se proto nedá přečíst a musí
+ * se odvodit: pamatuje se VLASTNÍ poslední nabídka u každé dražby a srovnává se
+ * s aktuální cenou. Když je cena vyšší, někdo tě přehodil; když je stejná, vede
+ * pořád tvoje (hra nižší ani stejnou nabídku nepřijme, takže rovnost může být
+ * jedině tvoje). Bez uložené nabídky se bere, že nevedeš.
+ *
+ * Nepřímé potvrzení existuje ve zprávách hry: „Někdo v aukci nabídl více než ty.
+ * Proto ti bylo 17 574 000Kč vráceno.“ – z toho plyne i to, že prohraná sázka
+ * se VRACÍ, takže přihazování nezmrazí peníze natrvalo.
  * ===========================================================================*/
 
 (() => {
@@ -26,7 +40,50 @@
   const ITEM = '.static-inv.holder';
   const PRICE = '.auction-price .sum';
   const INPUT = 'input[name="amount"]';
+  const BID = '.bidAuction';
   const MARK = 'cmcFillReady';          // aby se lišta nepřidávala dvakrát
+
+  /* Hlídka běží každých 30 s – tak to bylo zadané. */
+  const KONTROLA_MS = 30000;
+  /*
+   * Přihazuje se až v posledních třech minutách. Dřív by to jen zvedalo cenu
+   * proti sobě: každý příhoz je vidět a ostatní mají čas reagovat.
+   */
+  const OKNO_MS = 3 * 60 * 1000;
+  /* Minimální přebití. Hra minimum neuvádí, z pravidel plyne „o korunu víc“. */
+  const PRIHOZ = 1;
+
+  const data = () => NS.store.get().aukce || {};
+  const zaznam = id => data()[id] || {};
+
+  /** Identita dražby z adresy tlačítka (`…/auctionSpecial/bid/666` → „666“). */
+  function lotId(item) {
+    const b = item.querySelector(BID);
+    const a = b ? (b.getAttribute('action') || '') : '';
+    const m = a.match(/\/bid\/(\w+)/);
+    return m ? m[1] : null;
+  }
+
+  /**
+   * Zbývající čas v ms. Bere se `data-time` (sekundy s desetinami) – odpočet po
+   * číslicích je totéž, ale musel by se skládat ze tří prvků.
+   */
+  function zbyva(item) {
+    const v = parseFloat(item.getAttribute('data-time'));
+    if (Number.isFinite(v)) return Math.max(0, v * 1000);
+    const kus = sel => {
+      const e = item.querySelector('.timer-down ' + sel);
+      const n = e ? parseInt(String(e.textContent).replace(/\D/g, ''), 10) : NaN;
+      return Number.isFinite(n) ? n : 0;
+    };
+    const t = kus('.hours') * 3600 + kus('.minutes') * 60 + kus('.seconds');
+    return t ? t * 1000 : null;
+  }
+
+  const spinave = () => {
+    const el = document.querySelector('.value.renew-dirty_money');
+    return el ? NS.parse.toNum(el.textContent) : null;
+  };
 
   /** Aktuální nejvyšší sázka u položky. */
   function currentBid(item) {
@@ -70,16 +127,199 @@
     bar.className = 'cmc-bid-bar';
 
     const F = NS.fmt;
+    const id = lotId(item);
+
     bar.appendChild(document.createTextNode('vložit:'));
     bar.appendChild(button(F.num(bid), 'stejná částka jako nejvyšší sázka (' + F.kc(bid) + ')',
       () => fill(input, bid)));
-    bar.appendChild(button('+1', 'minimální přebití – o korunu víc', () => fill(input, bid + 1)));
+    /*
+     * „+1“ tady bylo, ale zrušené je záměrně: minimální přebití dělá hlídka sama
+     * a ručně je užitečnější rezerva proti dalšímu přihazujícímu.
+     */
     bar.appendChild(button('+1 %', '+1 % (' + F.kc(bid * 1.01) + ')', () => fill(input, bid * 1.01)));
     bar.appendChild(button('+5 %', '+5 % (' + F.kc(bid * 1.05) + ')', () => fill(input, bid * 1.05)));
+
+    /*
+     * Strop pro automatické přihazování. Je to pole u KONKRÉTNÍ dražby, ne
+     * globální nastavení – u každé věci chce člověk jinou hranici. Prázdno =
+     * vypnuto, takže hlídka o položku nezavadí.
+     */
+    if (id) {
+      const z = zaznam(id);
+      const stitek = document.createElement('span');
+      stitek.className = 'cmc-bid-stitek';
+      stitek.textContent = 'přihazovat do:';
+      bar.appendChild(stitek);
+
+      const strop = document.createElement('input');
+      strop.type = 'number';
+      strop.min = '0';
+      strop.step = '1';
+      strop.className = 'cmc-bid-strop';
+      strop.placeholder = 'strop';
+      if (z.strop) strop.value = String(z.strop);
+      strop.title = 'Do téhle částky bude rozšíření přihazovat samo:'
+        + ' kontroluje každých ' + (KONTROLA_MS / 1000) + ' s a přihodí,'
+        + ' když už nevedeš a do konce zbývá méně než '
+        + (OKNO_MS / 60000) + ' min. Nikdy nepřehodí strop. Prázdno = vypnuto.'
+        + ' Platí se ŠPINAVÝMI penězi; přebitá sázka se vrací.';
+      const ulozStrop = async () => {
+        const v = Math.max(0, Math.round(+strop.value || 0));
+        const stary = zaznam(id);
+        await NS.store.put('aukce', { ...data(), [id]: { ...stary, strop: v || null } });
+        stav(item, id);
+      };
+      strop.addEventListener('change', ulozStrop);
+      strop.addEventListener('blur', ulozStrop);
+      bar.appendChild(strop);
+
+      const info = document.createElement('span');
+      info.className = 'cmc-bid-stav';
+      bar.appendChild(info);
+      item._cmcStav = info;
+    }
 
     // lišta patří k poli, ne k tlačítku odeslání
     const holder = input.parentElement || item;
     holder.insertBefore(bar, input.nextSibling);
+    if (id) stav(item, id);
+  }
+
+  /* ---- kdo vede a co se má stát ------------------------------------------- */
+
+  /**
+   * Vedu u téhle dražby? Hra to neukazuje (viz hlavička), takže se to odvozuje
+   * z vlastní poslední nabídky. `null` = ještě jsem nepřihazoval.
+   */
+  function veduJa(id, cena) {
+    const moje = zaznam(id).moje;
+    if (moje == null) return false;
+    /*
+     * Rovnost je moje: hra nižší ani stejnou nabídku od nikoho jiného nepřijme.
+     * Malá tolerance kvůli haléřům (pole má step 0.01).
+     */
+    return cena <= moje + 0.01;
+  }
+
+  /** Co by hlídka udělala – vrací i důvod, aby to šlo napsat k položce. */
+  function rozhodni(item, id) {
+    const cena = currentBid(item);
+    const z = zaznam(id);
+    const strop = z.strop || 0;
+    const cas = zbyva(item);
+
+    if (!strop) return { co: 'vypnuto', text: '' };
+    if (cena == null) return { co: 'necti', text: 'cenu nejde přečíst' };
+    if (veduJa(id, cena)) {
+      return { co: 'vedu', text: 'vedeš ' + NS.fmt.kc(cena, { short: true }) };
+    }
+    const cil = Math.floor(cena) + PRIHOZ;
+    if (cil > strop) {
+      return { co: 'strop', cil,
+        text: 'nad strop (' + NS.fmt.kc(cil, { short: true }) + ' > '
+          + NS.fmt.kc(strop, { short: true }) + ')' };
+    }
+    if (cas == null) return { co: 'necti', text: 'čas nejde přečíst' };
+    if (cas > OKNO_MS) {
+      return { co: 'ceka', cil, cas,
+        text: 'čeká na poslední ' + (OKNO_MS / 60000) + ' min (zbývá '
+          + NS.fmt.dur(cas) + ')' };
+    }
+    const mam = spinave();
+    if (mam != null && mam < cil) {
+      return { co: 'penize', cil,
+        text: 'chybí špinavé (' + NS.fmt.kc(cil, { short: true }) + ')' };
+    }
+    return { co: 'prihodit', cil, cas, text: 'přihazuji ' + NS.fmt.kc(cil, { short: true }) };
+  }
+
+  /** Napíše k položce, co se děje – bez toho by hlídka byla neviditelná. */
+  function stav(item, id) {
+    const el = item._cmcStav;
+    if (!el) return;
+    const r = rozhodni(item, id);
+    el.textContent = r.text;
+    el.className = 'cmc-bid-stav'
+      + (r.co === 'vedu' ? ' cmc-bid-vedu' : '')
+      + (r.co === 'strop' || r.co === 'penize' ? ' cmc-bid-blok' : '');
+  }
+
+  /**
+   * Přihodí u jedné dražby a OVĚŘÍ to.
+   *
+   * !!! ÚSPĚCH SE MĚŘÍ !!!
+   * Klik na „Nabídnout cenu“ může projít bez následku (captcha, málo peněz,
+   * mezitím někdo přihodil). Proto se po kliku znovu přečte cena – musí být
+   * aspoň taková, jakou jsem poslal. Jinak se to NEZAPÍŠE jako moje nabídka,
+   * protože pak by hlídka mylně věřila, že vede, a nikdy by nepřihodila.
+   */
+  async function prihod(item, id, cil) {
+    const input = item.querySelector(INPUT);
+    const btn = item.querySelector(BID);
+    if (!input || !btn) throw new Error('pole nebo tlačítko v položce není');
+
+    fill(input, cil);
+    btn.click();
+
+    for (let i = 0; i < 12; i++) {
+      await new Promise(r => setTimeout(r, 400));
+      const cena = currentBid(item);
+      if (cena != null && cena >= cil) {
+        await NS.store.put('aukce', {
+          ...data(), [id]: { ...zaznam(id), moje: cil, at: Date.now() }
+        });
+        return { cil, cena };
+      }
+    }
+    throw new Error('cena se nezvedla na ' + NS.fmt.kc(cil, { short: true })
+      + ' – nabídka neprošla');
+  }
+
+  /* ---- hlídka ------------------------------------------------------------- */
+
+  let hlidkaTimer = null;
+
+  async function kolo() {
+    const cfg = NS.store.get().read;
+    if (cfg.auctionFill === false) return 0;
+    if (cfg.autoPaused === true) return 0;
+    if (NS.captcha && NS.captcha.blokuje()) return 0;
+    if (NS.jail && NS.jail.blocked()) return 0;
+
+    let udelano = 0;
+    for (const item of document.querySelectorAll(ITEM)) {
+      const id = lotId(item);
+      if (!id) continue;
+      const r = rozhodni(item, id);
+      stav(item, id);
+      if (r.co !== 'prihodit') continue;
+      try {
+        const v = await prihod(item, id, r.cil);
+        udelano++;
+        if (NS.gym) {
+          NS.gym.setStatus('aukce: přihozeno ' + NS.fmt.kc(v.cil, { short: true })
+            + ' (strop ' + NS.fmt.kc(zaznam(id).strop, { short: true }) + ')', true);
+        }
+      } catch (e) {
+        if (NS.gym) NS.gym.setStatus('⚠ aukce: ' + e.message, false);
+      }
+      stav(item, id);
+      /* jedna dražba na kolo – ať se nezaplní fronta a nezdvojí kliky */
+      break;
+    }
+    return udelano;
+  }
+
+  function hlidka() {
+    clearTimeout(hlidkaTimer);
+    const tik = async () => {
+      try {
+        if (NS.queue) await NS.queue.run('aukce', () => kolo());
+        else await kolo();
+      } catch (e) { /* zkusí se za dalších 30 s */ }
+      hlidkaTimer = setTimeout(tik, KONTROLA_MS);
+    };
+    hlidkaTimer = setTimeout(tik, KONTROLA_MS);
   }
 
   function scan() {
@@ -103,6 +343,7 @@
    */
   function start() {
     scan();
+    hlidka();
     const obs = new MutationObserver(() => {
       clearTimeout(start._t);
       start._t = setTimeout(scan, 300);
@@ -110,5 +351,6 @@
     obs.observe(document.body, { childList: true, subtree: true });
   }
 
-  NS.auction = { start, scan, currentBid };
+  NS.auction = { start, scan, currentBid, lotId, zbyva, veduJa, rozhodni, prihod,
+    kolo, KONTROLA_MS, OKNO_MS, PRIHOZ };
 })();
