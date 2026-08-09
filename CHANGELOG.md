@@ -6,6 +6,13 @@ Verze se drží v `extension/manifest.json`; nejvyšší číslo tady mu musí o
 Záznamy začínají u 1.13.0 – od starších verzí se nevedly, takže dopisovat je
 zpětně by znamenalo si je domyslet.
 
+## 1.23.1
+
+- **Denní limit u předmětů zmizel.** „Můžeš přihazovat v aukcích 4/4 krát denně“
+  je limit DIAMANTOVÉ aukce (`pointsAuction`), ne dražeb předmětů – u těch žádný
+  denní strop není. Ukazovat ho u předmětů znamenalo hlásit omezení, které
+  neexistuje, tak se limit nečte vůbec.
+
 ## 1.23.0
 
 - **Minimální příhoz v aukci je 2 % z částky, ne koruna.** Dřív tu bylo „+1“
@@ -18,13 +25,6 @@ zpětně by znamenalo si je domyslet.
 - **Klíč dražby nese i druh** (`auction:32038`). `pointsAuction/bid/12486`
   a `auction/bid/12486` jsou dvě různé dražby se stejným číslem – pod jedním
   klíčem by si zdědily „moji nabídku“.
-
-## 1.23.1
-
-- **Denní limit u předmětů zmizel.** „Můžeš přihazovat v aukcích 4/4 krát denně“
-  je limit DIAMANTOVÉ aukce (`pointsAuction`), ne dražeb předmětů – u těch žádný
-  denní strop není. Ukazovat ho u předmětů znamenalo hlásit omezení, které
-  neexistuje, tak se limit nečte vůbec.
 
 ## 1.22.1
 
