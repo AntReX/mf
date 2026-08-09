@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <title>CzechMafie Companion – nastavení</title>
+  <style>
+    body {
+      width: 320px; margin: 0; padding: 12px;
+      font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+      font-size: 13px; color: #f4e9d8; background: #1c110e;
+    }
+    h1 { font-size: 14px; margin: 0 0 2px; }
+    .sub { font-size: 11px; color: #b39c86; margin-bottom: 12px; }
+    fieldset {
+      border: 1px solid #4a251d; border-radius: 8px;
+      margin: 0 0 10px; padding: 8px 10px 10px;
+    }
+    legend { font-size: 10px; font-weight: 700; color: #d4a13a; text-transform: uppercase; letter-spacing: .5px; padding: 0 4px; }
+    .row { display: flex; align-items: center; gap: 6px; margin: 6px 0; }
+    .row span.lbl { flex: 1; font-size: 12px; }
+    input, select {
+      padding: 4px 6px; font: inherit; font-size: 12px; color: #f4e9d8;
+      background: #140c0a; border: 1px solid #4a251d; border-radius: 5px; outline: none;
+    }
+    input:focus, select:focus { border-color: #d4a13a; }
+    input[type=number] { width: 74px; }
+    input[type=text] { min-width: 0; }
+    input[type=checkbox] { transform: scale(1.1); }
+    .b-row { display: grid; grid-template-columns: 42px 1fr 76px 44px 22px; gap: 5px; align-items: center; margin-bottom: 5px; }
+    .b-row input, .b-row select { width: 100%; box-sizing: border-box; }
+    .f-row { display: grid; grid-template-columns: 1fr 58px 40px 22px; gap: 5px; align-items: center; margin-bottom: 3px; }
+    .f-row2 { display: grid; grid-template-columns: 1fr 1fr 66px; gap: 5px; align-items: center; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dotted #4a251d; }
+    .f-row input, .f-row select, .f-row2 input, .f-row2 select { width: 100%; box-sizing: border-box; }
+    .head-row { font-size: 9px; color: #8f7c68; text-transform: uppercase; letter-spacing: .4px; }
+    button {
+      padding: 6px 8px; font: inherit; font-size: 11px; font-weight: 600;
+      color: #f4e9d8; background: #2e1c16; border: 1px solid #4a251d;
+      border-radius: 6px; cursor: pointer;
+    }
+    button:hover { border-color: #d4a13a; }
+    button.primary { background: #6e1f14; border-color: #8c2b1c; }
+    button.x { padding: 2px 5px; background: transparent; border: none; color: #b39c86; }
+    button.x:hover { color: #e66767; }
+    .actions { display: flex; gap: 6px; margin-top: 6px; }
+    .actions button { flex: 1; }
+    /*
+     * Popisy jsou schované pod „i“. Bez toho měla každá volba pod sebou odstavec
+     * (třicet popisů, některé na deset řádků) a nastavení se v tom ztrácelo –
+     * text tam ale patří, protože většina těch čísel je změřená a bez vysvětlení
+     * se nedá rozhodnout, co nastavit. Rozbaluje se to po jednom.
+     */
+    .hint {
+      font-size: 10px; color: #8f7c68; line-height: 1.4; margin-top: 5px;
+      display: none;
+    }
+    .hint.open { display: block; }
+    /* uvnitř <label> je popis span, takže `display:block` by zlomil řádek */
+    span.hint.open { display: inline-block; }
+    .info-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 15px; height: 15px; margin-left: 5px; padding: 0;
+      flex: 0 0 auto;
+      font-size: 10px; font-weight: 700; font-style: italic;
+      line-height: 1; font-family: Georgia, serif;
+      color: #8f7c68; background: transparent;
+      border: 1px solid #4a251d; border-radius: 50%;
+      cursor: pointer; vertical-align: middle;
+    }
+    .info-btn:hover { color: #d4a13a; border-color: #d4a13a; }
+    .info-btn.open { color: #f0a07a; border-color: #d95926; background: rgba(217,89,38,.16); }
+    .ok { min-height: 14px; font-size: 11px; color: #62d3ab; text-align: center; margin-top: 6px; }
+    .err { color: #ff9d90; }
+    .ro {
+      font-size: 10px; color: #b39c86; background: rgba(25,158,112,.1);
+      border: 1px solid rgba(25,158,112,.3); border-radius: 6px;
+      padding: 6px 8px; margin-bottom: 10px; line-height: 1.4;
+    }
+    .ro.warn { background: rgba(217,89,38,.12); border-color: rgba(217,89,38,.45); }
+    .auto-box {
+      margin: 6px 0 8px; padding: 6px 8px;
+      border: 1px solid rgba(217,89,38,.45); border-radius: 6px;
+      background: rgba(217,89,38,.07);
+    }
+    .auto-box select { width: 108px; }
+    .preview {
+      margin: 6px 0 2px; padding: 5px 7px;
+      font-size: 10px; line-height: 1.5; color: #f4e9d8;
+      background: #140c0a; border: 1px solid #4a251d; border-radius: 5px;
+      font-variant-numeric: tabular-nums;
+    }
+    .preview b { color: #d4a13a; }
+    .preview .warn2 { color: #ffb3a8; }
+    .master-row {
+      align-items: flex-start; gap: 8px; margin: 0 0 10px; padding: 6px 8px;
+      border: 1px solid rgba(217,89,38,.45); border-radius: 6px;
+      background: rgba(217,89,38,.07);
+    }
+  </style>
+</head>
+<body>
+  <h1>CzechMafie Companion</h1>
+  <div class="sub">přehled, kalkulačka a evidence – bez zasahování do hry</div>
+
+  <div class="ro">Rozšíření hlavně <b>čte</b> stránky budov (GET) a počítá z nich – nesklízí, nekupuje, nespouští výrobu. Tlačítka v liště dole <b>přepošlou tvůj klik</b> na herní tlačítko: jeden tvůj klik = jedna akce ve hře.</div>
+  <div class="ro warn">Výjimky, které klikají <b>bez tvého kliknutí</b>: <b>automatický trénink</b> (níže) a <b>auto</b> u letadel a lodí (zaškrtávátko na konci řádku v liště). Obojí je vypnuté, dokud si to nezapneš, a je vidět přímo v liště.</div>
+  <div class="ro">Ve <b>vězení</b> se veškerá automatika sama zastaví – klikat se v něm nezkouší. Tlačítka v liště zůstávají aktivní, aby šlo zaplatit kauci nebo se podívat na stav. Detekce je zatím podle českých formulací – okno se dvakrát nepovedlo zachytit naživo, takže si ho rozšíření <b>uloží samo</b>, jak se objeví (jen struktura a text, ne HTML s tokeny), a pak se odhad nahradí přesným selektorem.</div>
+  <label class="row master-row"><span class="lbl"><b>⏸ Pozastavit veškerou automatiku</b><br><span class="hint" style="margin:0">Vypne trénink i dopravu jednou volbou. Nastavení se nemaže – po zapnutí pokračuje přesně to, co bylo. Totéž je tlačítkem <b>⏸ / ▶</b> v liště.</span></span><input type="checkbox" id="autoPaused"></label>
+
+  <fieldset>
+    <legend>Sledované budovy</legend>
+    <div class="b-row head-row"><span>ID</span><span>Název</span><span>Typ</span><span>Kap.</span><span></span></div>
+    <div id="buildings"></div>
+    <div class="actions"><button id="addBuilding">+ Přidat budovu</button></div>
+    <div class="hint">ID slotu najdeš v URL hry při otevřené budově: <code>/map/building/show/{id}</code>. Typ „ostatní“ vypíše, co se z fragmentu podaří přečíst. <b>Kap.</b> = celkový počet sudů / hektarů (nepovinné – vyplň, jen když ho panel neumí přečíst ze hry; slouží k výpočtu, na kolik plných dávek zásoba vydrží).</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Dopravní prostředky</legend>
+    <div id="fleet"></div>
+    <div class="actions"><button id="addFleet">+ Přidat prostředek</button></div>
+    <div class="hint">Kapacita = kolik se vejde do jednoho vyslání, ks = kolik jich máš, poplatek = Kč za jedno vyslání. „Zásoba z“ napojí prostředek na sledovanou budovu (surovina nebo volná kapacita); bez napojení zadáváš zásobu přímo v panelu.</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Čtení stavu</legend>
+    <label class="row"><span class="lbl">Načítat samo</span><input type="checkbox" id="autoRefresh"></label>
+    <div class="row"><span class="lbl">Interval (s)</span><input type="number" id="refreshSeconds" min="60" step="30"></div>
+    <div class="row"><span class="lbl">Selektor hotovosti</span><input type="text" id="cashSelector" placeholder="#money"></div>
+    <div class="row"><span class="lbl">Selektor banky</span><input type="text" id="bankSelector" placeholder="#bank"></div>
+    <div class="hint">Selektory jsou nepovinné – bez nich se hodnoty hledají heuristikou. Co panel nenajde, zadáš ručně: zůstatek v bance v záložce Stav, celý bod v záložce Historie. Majetek v historii = hotovost + banka.</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Aukce</legend>
+    <label class="row"><span class="lbl">Nabízet vyplnění sázky</span><input type="checkbox" id="auctionFill"></label>
+    <div class="hint">V aukci (budova #2) přidá pod pole „Tvá sázka?“ tlačítka <b>= částka</b>, <b>+1</b>, <b>+1 %</b>, <b>+5 %</b>, která do pole jen vloží hodnotu. Rozšíření sázku <b>neodesílá</b> – „Nabídnout cenu“ mačkáš ty.</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Posilovna a kasárna</legend>
+    <label class="row"><span class="lbl">Tlačítka do lišty dole</span><input type="checkbox" id="gymBar"></label>
+    <label class="row"><span class="lbl"><b>Trénovat i mimo posilovnu</b> (akční tlačítka všude)</span><input type="checkbox" id="gymRemote"></label>
+    <label class="row"><span class="lbl">Jen zkratka do posilovny (když trénink všude nechceš)</span><input type="checkbox" id="gymEverywhere"></label>
+    <div class="row"><span class="lbl">Zvýraznit při energii ≥</span><input type="number" id="gymAlertEnergy" min="0" step="5"></div>
+    <div class="auto-box">
+      <div class="row"><span class="lbl"><b>Automaticky klikat</b> (je i v liště)</span>
+        <select id="autoTrain">
+          <option value="">vypnuto</option>
+          <option value="speed">Rychlost</option>
+          <option value="strength">Síla</option>
+          <option value="defense">Obrana</option>
+          <option value="army_guards">Strážci</option>
+          <option value="army_warriors">Bojovníci</option>
+        </select></div>
+      <div class="row"><span class="lbl">Spustit při energii</span>
+        <select id="autoTrainPct">
+          <option value="100">100 %</option>
+          <option value="90">90 %</option>
+          <option value="80">80 %</option>
+          <option value="75">75 %</option>
+        </select></div>
+      <div class="row"><span class="lbl">Klikat dolů do</span>
+        <select id="autoTrainFloor">
+          <option value="80">80 %</option>
+          <option value="70">70 %</option>
+          <option value="60">60 %</option>
+          <option value="50">50 %</option>
+          <option value="40">40 %</option>
+          <option value="30">30 %</option>
+          <option value="20">20 %</option>
+          <option value="10">10 %</option>
+          <option value="0">0 % (vyčerpat)</option>
+        </select></div>
+      <div class="row"><span class="lbl">Jen se štěstím alespoň</span><input type="number" id="autoTrainLuck" min="0" step="10"></div>
+      <div class="row"><span class="lbl">Prodleva mezi kliky (ms)</span><input type="number" id="autoTrainGap" min="200" step="100"></div>
+      <div class="hint">Tohle je <b>automatizace hry</b>, ne zjednodušení klikání – jako jediná funkce klikne sama, bez tebe. Jakmile energie dosáhne <b>„Spustit při“</b>, klikne se zvolená akce tolikrát, dokud energie neklesne na <b>„Klikat dolů do“</b> (max 100× na dávku). Pak se čeká, než se energie znovu naplní. Dolní hranice musí být nižší než horní – jinak ji nastavení samo posune.<br><br>
+      Procenta se berou z ukazatele, který si hra sama píše do HUD, takže „100 %“ je skutečná plnost. <b>Štěstí</b> (v HUD hned vedle energie) je druhá spotřebovávaná měna – trénink z něj bere asi 50 na jeden klik a doplňuje se ze šperků, ne samo. Proto se dávka rozjede jen tehdy, když ho je alespoň zadané minimum, a při poklesu pod něj se zastaví. Jinak by hra jen odmítala. Dávka se zastaví i při odmítnutí hrou (málo štěstí nebo peněz). V liště je odznak <b>AUTO</b> a tlačítkem <b>■</b> zastavíš právě běžící dávku.<br><br>
+      Prodleva je <b>pevná</b>. Záměrně tu není žádné náhodné rozptýlení časování – zjednodušit si klikání je jedna věc, maskovat, že jde o klikátko, druhá.<br><br>
+      <b>Posilovna vs. kasárna:</b> posilovna uvádí cenu tréninku ve fragmentu, takže si rozšíření energii odečítá samo a dávka umí jít plynule až na dno. Kasárna cenu neuvádějí nikde – tam se proto klikne <b>jednou</b> a pak se čeká (~15 s), než hra sama přepíše HUD; dno se vyhodnotí z jejích čísel. Jeden strážce stojí velký díl energie (u mě 20 z 58), takže jeden klik na cyklus je i tak skoro celá dávka.<br><br>
+      Tentýž výběr je i <b>na konci řádku „Trénovat“ v liště</b>, aby bylo vidět, že je něco zapnuté, a šlo to vypnout na jeden klik. Hranice a prodleva se nastavují jen tady.<br><br>
+      Mimo posilovnu to potřebuje zapnuté <b>Trénovat i mimo posilovnu</b>, jinak není na co klikat.</div>
+    </div>
+    <div class="hint">V posilovně (#26) a kasárnách (#20) přidá vlevo dole lištu s tlačítky <b>Rychlost</b>, <b>Síla</b>, <b>Obrana</b> a <b>Strážci</b>, <b>Bojovníci</b>, ať se nemusí scrollovat. Šipkou <b>‹</b> ji dočasně skryješ na malý úchyt. Klik lišty se přepošle na „Trénovat“ v příslušné sekci – rozšíření nic neodesílá do hry a Turbo za diamanty v liště <b>není</b>, aby se nedalo zmáčknout omylem. Mimo posilovnu se z lišty stane <b>zkratka</b>, která ji otevře.<br><br>
+    <b>Trénovat i mimo posilovnu</b> jde dál: na tvůj klik stáhne fragment posilovny, vloží tlačítko do herního okna, přepošle klik a uklidí. Požadavek posílá hra, ne rozšíření, a je to vždy <b>jeden klik = jeden trénink</b>. Funkčně je to ale „otevři posilovnu na pozadí“ – nejblíž automatizaci, co tu je. Proto výchozí vypnuto.<br><br>
+    <b>Zvýraznit při energii ≥</b> obarví lištu zeleně, jakmile energie přeleze zadanou hodnotu, a ukáže, kolik tréninků z ní vyjde. Je to jen signál – <b>klikáš pořád ty</b>. 0 = vypnuto.</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Letiště a přístav</legend>
+    <label class="row"><span class="lbl">Řádek letadel (L1, L2…)</span><input type="checkbox" id="planeBar"></label>
+    <label class="row"><span class="lbl">Řádek lodí (S1, S2…)</span><input type="checkbox" id="boatBar"></label>
+    <div class="auto-box">
+      <label class="row"><span class="lbl"><b>Auto</b> – letadla sbírat a odesílat sama</span><input type="checkbox" id="autoPlane"></label>
+      <label class="row"><span class="lbl"><b>Auto</b> – lodě sbírat a vypravovat samy</span><input type="checkbox" id="autoBoat"></label>
+      <div class="hint">Tohle klikne <b>bez tvého kliknutí</b>. Jak něco doletí, samy se seberou peníze (dokud se nesbírají, hra odeslání blokuje a strhává 3 % za každých 10 minut), a co stojí doma, se samo vypraví – náklad se vybírá stejně jako ručně. Mezi akcemi je pevná prodleva 1,2 s, na jedno kolo max 8 akcí.<br><br>
+      Totéž zaškrtávátko je i na konci řádku v liště, kde je vidět, že je zapnuté. Odškrtnutím to hned přestane.</div>
+    </div>
+    <div class="hint">Do lišty přidá řádek s letadly (<b>#60</b>) a lodí (<b>#30</b>) včetně těch, které ještě nemáš (vypnuté, v tooltipu je potřebná úroveň). Na tlačítku je <b>L1/12</b> – číslo prostředku a za lomítkem, <b>kolikrát ho ještě pošleš na plný náklad</b> (strop 99, přesné číslo je v tooltipu). Stav nese <b>barva</b>: zeleně přivezlo peníze (sebrat), vínově se dá vypravit, šedě je venku, <b>🔒</b> ještě není koupené. Co se stane a s jakým nákladem, řekne tooltip; legenda barev visí na popisku řádku a po akci se výsledek vypíše v liště.<br><br>
+    <b>Náklad:</b> vybere se ten dražší, pokud ho je dost na <b>plný</b> náklad – u letadel <b>whisky</b>, jinak <b>pivo</b>; u lodí <b>pervitin</b>, jinak <b>konopí</b>. Na tlačítku je vidět, co se pošle, a oranžový rámeček znamená, že ani náhradní náklad kapacitu nezaplní.<br><br>
+    Stav se čte z <code>/map/plane/{n}</code> a <code>/map/boat/{n}</code> a drží se 2 minuty, po akci se přečte jen dotyčný prostředek. Klik funguje stejně jako u kasáren: vloží fragment do herního okna, klikne na skutečné „Sebrat peníze“ / „Odeslat“ a uklidí – <b>požadavek posílá hra</b> a jeden tvůj klik = jedna akce. Nic se neděje samo, žádný časovač.</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Diamantové šachty</legend>
+    <label class="row"><span class="lbl">Řádek šachet v liště</span><input type="checkbox" id="mineBar"></label>
+    <label class="row"><span class="lbl">…a v něm tlačítko <b>Mzda</b> (úřad práce #9)</span><input type="checkbox" id="workBar"></label>
+    <div class="auto-box">
+      <label class="row"><span class="lbl"><b>Auto</b> – vybírat mzdu samo (je i v liště)</span><input type="checkbox" id="workAuto"></label>
+      <div class="row"><span class="lbl">Nejdřív po (hodin práce)</span><input type="number" id="workAutoMinHours" min="0" max="24" step="1"></div>
+      <div class="row"><span class="lbl">Kontrolovat každých (s)</span><input type="number" id="workAutoEverySec" min="30" step="30"></div>
+      <div class="hint"><b>Nevybírá „po hodině“, ale až se zvedne počet diamantů.</b> Z pozorování koruny přitékají plynule, ale diamanty se přičítají po celých hodinách (18 💎 při 3 h = přesně 6/h a mezi hodinami se číslo nemění). Výběr uprostřed hodiny tedy rozdělanou část zahodí – v 59. minutě je to <b>5,9 💎</b>, těsně po hranici nic. Zvednutí počtu diamantů je přímé pozorování té hranice, takže se nemusí spoléhat na čas, který hra uvádí zaokrouhlený na celé hodiny.<br><br>
+      Interval pak určuje jen to, o kolik se hranice mine: každé <b>2 min ≈ 0,1 💎</b>, každých 10 min ≈ 0,5 💎 (a 6 vs. 30 požadavků za hodinu). Kdyby zaměstnání diamanty nedávalo, hranice se poznat nedá a vybírá se prostě po zadaném počtu hodin.</div>
+    </div>
+    <div class="hint">Do lišty přidá řádek se šachtami (<b>D30</b>, <b>D31</b>…). Šachta se střídavě pouští do práce a pak se z ní sbírají diamanty – tlačítko vždycky udělá to, co je na řadě: zeleně <b>sebrat</b>, vínově <b>začít</b>, šedě <b>pracuje</b> se zbývajícím časem.<br><br>
+    Za svislítkem je ještě tlačítko <b>Mzda</b> z úřadu práce (<b>#9</b>) – vybere nasbíranou výplatu (u mě 12 613 Kč + 18 💎). Mzda průběžně roste, takže se nedá propásnout, jen zapomenout. <b>Přihlašování na pracovní pozice v liště schválně není</b> – to je rozhodnutí, ne rutina, a omylem by ti to změnilo práci.<br><br>
+    <b>Auto</b> (zaškrtávátko na konci řádku) hotové šachty samo sebere a nespuštěné pustí do práce. Z celé lišty je to nejméně sporná automatika – cyklus je pevný (3 h), nic se nevybírá a nedá se tím nic prohrát, jen se nezapomene. Platí hlavní vypínač <b>⏸</b> i zámek ve vězení.<br><br>
+    Čísla šachet se berou z mapy (nic to nestojí) a stav z <code>/map/mine/show/{n}</code>. <b>Vylepšení šachty v liště schválně není</b>, aby se drahé tlačítko nedalo zmáčknout omylem.</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Nevěstinec (#19)</legend>
+    <label class="row"><span class="lbl">Tlačítko <b>Nevěstinec</b> v řádku šachet</span><input type="checkbox" id="brothelBar"></label>
+    <div class="auto-box">
+      <label class="row"><span class="lbl"><b>Auto</b> – vybírat peníze samo (je i v liště)</span><input type="checkbox" id="brothelAuto"></label>
+      <div class="hint">Cyklus je pevný (hra píše „Peníze lze vybírat každých 5 hodin“) a po jeho konci peníze čekají. <b>Vybírá se hned</b>, protože hra varuje: „při zpoždění 10 min se odečte 2 %“ – tady tedy nemá smysl na nic čekat, na rozdíl od mzdy, kde se čeká na hranici hodiny.<br><br>
+      Kontrola se proto <b>neplánuje na pevný interval, ale na konec cyklu</b>: z odpočtu se spočítá, kdy to bude, a zkusí se to tři sekundy po tom. Stojí to jeden požadavek za cyklus místo desítek.<br><br>
+      V tooltipu je počet prostitutek, výdělek na jednu (5–10 Kč) a odhad výplaty; hra samotnou částku neuvádí. <b>Nábor ani prodej prostitutek v liště nejsou</b> – stojí peníze a nejde o rutinu.</div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Blackjack (#18) – hraje se za diamanty</legend>
+    <label class="row"><span class="lbl">Sázka <b>v diamantech</b> (nejmenší žeton 10)</span><input type="number" id="bjStake" min="10" step="10"></label>
+    <label class="row"><span class="lbl">Nechat aspoň (rezerva 💎)</span><input type="number" id="bjReserve" min="0" step="10"></label>
+    <label class="row"><span class="lbl">Po dohraném kole <b>hrát hned další</b></span><input type="checkbox" id="bjLoop"></label>
+    <p class="hint">Vyber v liště nebo výše <b>🃏 blackjack (#18)</b> a hraje se samo,
+      kolo za kolem, <b>základní strategií</b> (ber/stůj podle tvého součtu a dealerovy
+      odkryté karty). Změřená pravidla: <b>blackjack 2,5×</b>, výhra 2×, remíza vrací
+      vklad, dealer stojí na 17. <b>Double ani split ve hře nejsou</b>, takže výhoda
+      domu zůstává kolem 2 % i při bezchybné hře – vydělávat na tom nelze, jen
+      prohrávat nejpomaleji možným tempem. Počítání karet nepomůže: hra míchá po
+      každém rozdání (ověřeno na barvách karet). Výsledky jsou v panelu v záložce
+      <b>Blackjack</b>.<br><br>
+      <b>Hrát hned další:</b> po dokončeném kole se blackjack zařadí do fronty znovu,
+      na konec – takže když mezitím něco čeká (trénink, zahrady, šachty), přijde to
+      na řadu první, a až fronta nemá nic dalšího, hraje se další kolo. Vypnuto se
+      hraje jedno kolo na tik, tedy asi jedno za pět sekund.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Poker (#18) – Casino Hold'em, jediná hra s plusem</legend>
+    <label class="row"><span class="lbl">Ante <b>v diamantech</b> (žeton 10)</span><input type="number" id="pkStake" min="10" step="10"></label>
+    <label class="row"><span class="lbl">Nechat aspoň (rezerva 💎)</span><input type="number" id="pkReserve" min="0" step="10"></label>
+    <label class="cmc-check"><input type="checkbox" id="pkMereni">
+      Měřicí režim: střídat ante po blocích a měřit poctivost zvlášť</label>
+    <label class="row"><span class="lbl">Měření – ante ke střídání (oddělené čárkou)</span><input type="text" id="pkMereniAnte" placeholder="10,20"></label>
+    <label class="row"><span class="lbl">Měření – kol na blok</span><input type="number" id="pkMereniBlok" min="20" max="1000" step="10"></label>
+    <label class="cmc-check"><input type="checkbox" id="pkStopVychyleni" checked>
+      Přestat hrát poker, když rozdání vychýlí dealerovi nad 3 σ</label>
+    <label class="row"><span class="lbl">Zdvojit až při převaze (procentní body)</span><input type="number" id="pkPrah" min="0" max="50" step="1"></label>
+    <label class="row"><span class="lbl">Vzorků na výpočet šance</span><input type="number" id="pkVzorku" min="200" max="20000" step="100"></label>
+    <label class="row"><span class="lbl">Po dohraném kole <b>hrát hned další</b></span><input type="checkbox" id="pkLoop"></label>
+    <p class="hint"><b>Tohle je jediná hra v kasinu s kladnou očekávanou hodnotou.</b>
+      Hráč i dealer mají dvě karty a společný stůl, takže hra sama je fér (návratnost 99,3 %,
+      tedy nula). Cenu má jen rozhodnutí: po flopu se dosimulují neznámé karty a když je
+      šance na výhru vyšší než na prohru, sázka se <b>zdvojnásobí</b>. Simulace 20 000 kol dává
+      <b>+0,15 ante na kolo, tedy návratnost ~110 %</b>.<br><br>
+      <b>Rozptyl je ale osminásobek té výhody</b> (σ ≈ 1,2 ante na kolo): po 20 kolech je šance
+      na plus 71 %, po 100 kolech 89 %, po 500 kolech 99,7 %. Na krátkém úseku rozhoduje štěstí.<br><br>
+      <b>Práh</b> 0 znamená „zdvojit vždy, když jsem favorit“ – simulace ukázala, že 0, +5 i +10
+      dávají skoro totéž, takže na něm nesejde. <b>Vzorky</b> určují přesnost výpočtu; 3 000 je
+      pár desítek milisekund a chyba pod 2 procentní body. Sázka i rezerva jsou v diamantech
+      a je potřeba mít <b>dvojnásobek ante</b>, aby se dalo zdvojnásobit.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Vylepšování budov</legend>
+    <label class="cmc-check"><input type="checkbox" id="upgBar" checked>
+      Řádek <b>Vylepšit</b> v liště (Továrna, Dům zločinů, Posilovna, Nemocnice, Závody, Kasárna)</label>
+    <label class="cmc-check"><input type="checkbox" id="upgAuto">
+      <b>Vylepšovat automaticky</b> – vždycky nejlevnější volnou budovu</label>
+    <label class="row"><span class="lbl">Strop na jedno vylepšení (0 = bez omezení)</span><input type="number" id="upgMaxCena" min="0" step="10000"></label>
+    <label class="row"><span class="lbl">Nechat být (hotovost + banka)</span><input type="number" id="upgRezerva" min="0" step="100000"></label>
+    <div class="hint">
+      Vylepšení se platí <b>čistými penězi v hotovosti</b>, a ta bývá skoro nulová (naměřeno
+      3 499 Kč proti ceně 79 359 Kč), takže si to <b>samo vybere z banky</b> – a ověří, že se
+      hotovost opravdu zvedla. Kdyby se to jen kliklo, hlásilo by to úspěch i tam, kde hra nic
+      nestrhla.<br><br>
+      Automatika bere <b>nejlevnější volnou budovu</b>: za stejné peníze to dá víc úrovní
+      a neuvázne na jedné drahé, zatímco tři levné stojí. <b>Strop</b> ji udrží u levných,
+      <b>rezerva</b> je hranice, pod kterou celkový majetek (hotovost + banka) nesmí spadnout.<br><br>
+      Budova, která se právě vylepšuje, má v liště <b>⏳</b> a nedá se zmáčknout – hra tam místo
+      „Vylepšit“ nabízí jen „Urychlit“ za diamanty a <b>do toho rozšíření nesahá</b>. Zbývající
+      čas se přečte z odpočtu, takže se taková budova <b>znovu nečte</b>, dokud jí neuplyne.
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Boj – útoky na neaktivní hráče</legend>
+    <label class="cmc-check"><input type="checkbox" id="atkBar" checked>
+      Řádek <b>Boj</b> v liště (dvě tlačítka: neaktivní / neaktivní v gangu)</label>
+    <label class="cmc-check"><input type="checkbox" id="atkAuto">
+      <b>Automaticky útočit</b> (respektuje hlavní vypínač ⏸ i zámek ve vězení)</label>
+    <label class="row"><span class="lbl">Automatika hledá</span>
+      <select id="atkDruh">
+        <option value="not-active">neaktivní hráče</option>
+        <option value="not-active-gang">neaktivní členy gangu</option>
+      </select></label>
+    <label class="row"><span class="lbl"><b>Minimální</b> úroveň soupeře (0 = bez omezení)</span><input type="number" id="atkMinUroven" min="0" step="1"></label>
+    <label class="row"><span class="lbl">Strop úrovně – <b>ručně</b> (% tvé)</span><input type="number" id="atkPodil" min="1" max="100" step="5"></label>
+    <label class="row"><span class="lbl">Strop úrovně – <b>automatika</b> (% tvé)</span><input type="number" id="atkPodilAuto" min="1" max="100" step="5"></label>
+    <label class="row"><span class="lbl">Nechat aspoň (rezerva energie)</span><input type="number" id="atkRezerva" min="0" step="10"></label>
+    <label class="row"><span class="lbl">Nejmenší mezera mezi útoky (s)</span><input type="number" id="atkPauza" min="5" step="15"></label>
+    <div class="hint">
+      Jeden útok stojí <b>30 energie</b> a energie se dobíjí ~<b>10 za minutu</b> (naměřeno),
+      takže strop je asi <b>20 útoků za hodinu</b> – tempo drží energie, ne časovač. Pauza je
+      proti tomu, aby se při plné energii nevystřílely tři útoky za sebou; hustý sled kliků je
+      přesně to, na co hra reaguje <b>captchou</b>.<br><br>
+      <b>Minimální úroveň</b> platí pro ruku i automatiku – úplní začátečníci nedávají
+      zkušenosti ani peníze, takže je útok jen spálená energie. Když je minimum nad stropem,
+      neútočí to a řekne, že si nastavení odporuje.<br><br>
+      <b>Strop úrovně je zvlášť pro ruku a pro automatiku</b>, protože u ručního kliku se na
+      soupeře podíváš a automatika ne. Úroveň je vidět už v seznamu, takže silnější hráči se
+      vyřadí bez jediného dalšího kliku. <b>Kdo leží v nemocnici, v seznamu poznat NENÍ</b> –
+      to se pozná až ve scéně útoku, takže ležící se přeskakují až tam (nejvýš 4 pokusy na kolo).<br><br>
+      Když nikdo nevyhovuje, automatika se <b>odmlčí na 10 minut</b> místo aby tloukla do
+      hledání. Po 5 skutečných chybách po sobě se sama vypne a napíše proč. Bez znalosti
+      vlastní úrovně <b>neútočí vůbec</b> – strop by se nedal držet.
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Smazat záznamy her</legend>
+    <label class="row"><span class="lbl">Bilance <b>kasina</b> (kuličky #15) <b id="casinoLogInfo">–</b></span><button type="button" id="casinoLogClear" class="mini">smazat</button></label>
+    <label class="row"><span class="lbl">Záznam <b>automatu</b> (#18) <b id="slotsLogInfo">–</b></span><button type="button" id="slotsLogClear" class="mini">smazat</button></label>
+    <label class="row"><span class="lbl">Záznam <b>blackjacku</b> (#18, 💎) <b id="bjLogInfo">–</b></span><button type="button" id="bjLogClear" class="mini">smazat</button></label>
+    <label class="row"><span class="lbl">Ladicí <b>průběh</b> kol blackjacku <b id="bjTraceInfo">–</b></span><button type="button" id="bjTraceClear" class="mini">smazat</button></label>
+    <label class="row"><span class="lbl">Záznam <b>pokeru</b> (#18, 💎) <b id="pkLogInfo">–</b></span><button type="button" id="pkLogClear" class="mini">smazat</button></label>
+    <label class="row"><span class="lbl">Ladicí <b>průběh</b> kol pokeru <b id="pkTraceInfo">–</b></span><button type="button" id="pkTraceClear" class="mini">smazat</button></label>
+    <label class="row"><span class="lbl">Příjmy z <b>mzdy a nevěstince</b> <b id="prijmyInfo">–</b></span><button type="button" id="prijmyClear" class="mini">smazat</button></label>
+    <p class="hint">Maže se jen měření rozšíření, ve hře se tím nic nemění.
+      Nastavení (sázka, rezerva, násobky) zůstává. Totéž jde i v panelu:
+      kasino v záložce <b>Historie</b>, automat v záložce <b>Automat</b>,
+      blackjack v záložce <b>Blackjack</b>.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Zahrady (20 polí, sloty 35–54)</legend>
+    <label class="row"><span class="lbl">Tlačítka <b>🌾 / 🌱</b> v řádku šachet</span><input type="checkbox" id="farmBar"></label>
+    <label class="row"><span class="lbl">Automaticky zasadit a sklidit</span><input type="checkbox" id="farmAuto"></label>
+    <label class="row"><span class="lbl">Rezerva energie pro zahrady (%)</span><input type="number" id="farmReservePct" min="0" max="99" step="5"></label>
+    <label class="row"><span class="lbl">Limit osetých zahrad <b id="farmLimitVal">?</b></span><button type="button" id="farmLimitReset" class="mini">zjistit znovu</button></label>
+    <p class="hint">Sklizeň <b>vždy zasadí pole zpátky</b>, takže jedno pole stojí
+      <b>6 energie</b> (3 + 3) a nikdy nezůstane ležet prázdné. Do pole se nezačne,
+      když na obě poloviny nestačí – všech 20 polí je ~120 energie, víc než kolik jde
+      mít najednou, takže dávka skončí na energii a zbytek dojede později.<br>
+      <b>Limit:</b> hra dovolí osít jen určitý počet zahrad podle úrovně
+      („na své úrovni můžeš osít maximálně 17 zahrad“) a nad ním osetí odmítne.
+      V DOM to nikde není, takže se to bere z té hlášky a uloží – prázdná pole nad
+      limitem se pak nenabízejí. Sklizeň se zasazením zpátky limit neřeší: místo
+      uvolní a hned zaplní. Po zvýšení úrovně dej <i>zjistit znovu</i>.<br>
+      <b>Rezerva</b> drží energii nad zadanou hranicí i proti automatickému tréninku –
+      bez ní by trénink energii snědl do svého dna a na pole by nikdy nic nezbylo.
+      Platí jen dokud je co dělat. Výnos jednoho pole: <b>300 kg zeleniny</b>.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Výrobny surovin</legend>
+    <label class="row"><span class="lbl">Řádek <b>Výrobny</b> v liště</span><input type="checkbox" id="vyrBar" checked></label>
+    <label class="row"><span class="lbl">Automaticky sbírat, kupovat a spouštět</span><input type="checkbox" id="vyrAuto"></label>
+    <p class="hint">Konopná farma (#27), laboratoř pervitinu (#21), palírna whisky (#24)
+      a pivovar (#29). Jedno kolo dělá <b>sebrat → dokoupit chybějící materiál →
+      spustit</b> a v tomhle pořadí schválně: kapacitu (sudy, hektary, chemiky)
+      uvolní teprve sběr, takže dřív by se kupovalo na kapacitu, která ještě není
+      volná. Materiál se platí <b>špinavými penězi</b>; když nejsou, řekne to a nic
+      nekoupí. Za tik se řeší <b>jedna</b> budova a střídají se.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Šetření baterie</legend>
+    <label class="row"><span class="lbl">Zastavit animace hry</span><select id="usporAnimace">
+      <option value="napozadi">když nekoukáš na kartu</option>
+      <option value="vzdy">vždy</option>
+      <option value="nikdy">nikdy (nechat běžet)</option>
+    </select></label>
+    <p class="hint">Hra drží <b>27 nekonečných animací</b> (pulzující tlačítka a
+      poskakující ikony, smyčka 1–2 s). Nepřepočítávají layout, ale běží na
+      kompozitoru, takže se karta překresluje <b>každý snímek</b>, i když se nic
+      nemění. Vypnutím se nic neztratí – jsou to jen upoutávky a co se dá udělat,
+      je stejně v liště. Skrytou nebo zakrytou kartu zastaví Chrome sám; problém
+      je karta viditelná a nečinná (druhý monitor).</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Noční obnovování stránky</legend>
+    <label class="row"><span class="lbl">Obnovovat stránku sám</span><input type="checkbox" id="reloadAuto"></label>
+    <p class="hint">Hra po delší době přestane reagovat a <b>obnovení stránky to
+      spraví</b> – jenže přes noc u toho nikdo nesedí. Zapíná se to i <b>⟳</b>
+      v liště vpravo nahoře, kde je vidět odpočet.<br><br>
+      Prodleva se <b>losuje z 30–60 minut</b> a nová hodnota se vybere po každém
+      obnovení. Pevná perioda by z toho udělala hodinky, které jdou na sekundu –
+      a to je na serveru poznat víc než člověk, který si hru občas obnoví.<br><br>
+      <b>Nikdy uprostřed rozdělané akce.</b> Obnovit stránku v půlce pokerového
+      kola nebo mezi „Vybrat z banky“ a „Převést na špinavé“ znamená přijít
+      o peníze. Čeká se proto na prázdnou frontu; termín se přitom nezahodí, jen
+      se posune. Pár sekund předem se to napíše do lišty, ať to nevypadá jako
+      pád stránky.<br><br>
+      Vedlejší užitek: probere to i kartu <b>osiřelou po reloadu rozšíření</b>,
+      která jinak vypadá živě, ale automatika v ní stojí.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Banka (#22) – praní peněz</legend>
+    <label class="row"><span class="lbl">Tlačítka <b>🧼 / 💰</b> v řádku šachet</span><input type="checkbox" id="bankBar" checked></label>
+    <label class="row"><span class="lbl">Automaticky prát a sbírat</span><input type="checkbox" id="bankAuto"></label>
+    <label class="row"><span class="lbl">Automaticky ukládat peníze do skladu</span><input type="checkbox" id="bankUloz"></label>
+    <label class="row"><span class="lbl">Kolik nechat mimo banku (Kč)</span><input type="number" id="bankKeep" min="0" step="100000"></label>
+    <label class="row"><span class="lbl">Kolik špinavých nechat nevypraných (Kč)</span><input type="number" id="bankKeepDirty" min="0" step="100000"></label>
+    <label class="row"><span class="lbl">Ukládat až od částky (Kč)</span><input type="number" id="bankMinVklad" min="0" step="1000"></label>
+    <p class="hint"><b>0 = vlož všechno nad rezervu.</b> Není to kvůli ceně –
+      vklad ani výběr energii <b>nestojí</b> (změřeno 21 → 21 → 21 přes obojí).
+      Je to jen proti tomu, aby se to klikalo pořád po drobných.<br><br>
+      Dřív se tady zadané číslo <b>tiše zvedalo na 10 000</b> a výchozí hodnota byla
+      milion, takže kdo si nastavil rezervu 100 a čekal, že se vloží zbytek,
+      nedostal nic, dokud se nenastřádal milion. Teď se bere přesně to, co zadáš.</p>
+    <label class="row"><span class="lbl">Neukládat pod energií</span><input type="number" id="bankMinEnergie" min="0" step="10"></label>
+    <p class="hint">Vypere <b>maximum</b>, které hra nabídne (podle úrovně budovy a
+      množství špinavých peněz) – částka se nezadává, bere se předvyplněná.
+      <b>Hra si bere 30 %</b> (100 Kč = 70 Kč), proto je automatika vypnutá a zapíná
+      se vědomě. Jsou to <b>dva kroky</b>: praní špinavé odebere a čisté přijdou až
+      po sebrání, takže automatika <b>sbírá dřív, než pere</b>.</p>
+    <p class="hint"><b>Ukládání je něco jiného než praní</b> a je <b>zdarma</b>:
+      přesune čisté peníze nad rezervou do skladu banky, kde na ně nikdo nedosáhne.
+      Proto je to samostatné zaškrtávátko – kdo chce jen bezpečí, nemusí platit
+      30 % za praní. Ukládá se nejméně po 10 tis. Kč, ať to neklikalo po korunách,
+      a rezervu jde měnit i přímo v liště.</p>
+    <p class="hint"><b>Vklad energii nestojí</b> – změřeno (21 → 21 přes vklad
+      i výběr). Automatika přesto čeká, až se nastřádá zadaná částka, ať se to
+      nedělá pořád dokola; ruční tlačítko tím omezené není. <b>Pozor:</b> hra si
+      částku vkladu řídí po svém (zadáno 1 000 000 → vloženo 997), takže se po
+      každém vkladu ověří, kolik se doopravdy přesunulo – když to nesedí,
+      ukládání se samo vypne a řekne to.</p>
+    <p class="hint"><b>Rezerva špinavých</b> je něco jiného: špinavými se platí
+      materiál pro výrobny, takže vyprat je do posledního by je nechalo bez nákupu.
+      Pere se nejvýš tolik, aby tahle částka zbyla. Obě rezervy jsou i v liště.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Kámen–Nůžky–Papír (#17)</legend>
+    <label class="row"><span class="lbl">Políčko sázky a tlačítko v liště</span><input type="checkbox" id="rpsBar" checked></label>
+    <label class="row"><span class="lbl">Sázka (špinavé peníze, min. 100)</span><input type="number" id="rpsStake" min="100" step="100"></label>
+    <p class="hint">Vypíše výzvu za zadanou částku a <b>znamení zvolí náhodně</b>.
+      Sázka se strhne hned a <b>nejde stáhnout</b>; výsledek přijde, až výzvu někdo
+      přijme, a hra nikde neřekne, kdo vyhrál. Z výhry si bere <b>10 %</b>, takže
+      návratnost je 96,7 % – na úkoly ano, na výdělek ne.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Zločiny</legend>
+    <label class="row"><span class="lbl">Řádek zločinů v liště</span><input type="checkbox" id="crimeBar"></label>
+    <div class="hint">Do lišty přidá řádek se všemi zločiny z mapy. Na tlačítku je <b>potřebná odvaha</b> (u každého zločinu jiná, takže slouží i jako označení), zbytek – název, rychlost, odměna a proč to zrovna nejde – je v tooltipu. Řadí se podle odvahy.<br><br>
+    <b>Barvy:</b> vínově jde spáchat, oranžový rámeček znamená, že se odvaha musí ještě obnovit, <b>🔒</b> že nestačí rychlost (v tooltipu je, kolik chybí).<br><br>
+    <div class="auto-box">
+      <div class="row"><span class="lbl"><b>Automaticky páchat</b> (je i v liště)</span>
+        <select id="autoCrime"><option value="0">vypnuto</option></select></div>
+      <div class="hint">Vybraný zločin se páchá <b>sám, bez tvého kliknutí</b>, dokud na něj stačí odvaha (max 20× na dávku, prodleva 1 s). Po každém kliku se čeká, až hra sama přepíše odvahu v HUD – bez toho potvrzení se dál neklikne, aby se to nepáchalo podle zastaralého čísla. Nabídka se plní z načtených zločinů; ty, na které nestačí rychlost, jsou v ní vypnuté.</div>
+    </div>
+    Klik přepošle klik na herní <b>„Spáchat zločin“</b> – <b>požadavek posílá hra</b> a jeden tvůj klik = jeden zločin. <b>Turbo</b> varianty za diamanty v liště nejsou, aby se drahé tlačítko nedalo zmáčknout omylem. Požadavky se čtou z <code>/map/crime/{n}</code> a drží se 6 hodin (jsou statické); odvaha a rychlost se berou z HUD při každém překreslení.</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Kasino „Šťastný tip“ (#15)</legend>
+    <label class="row"><span class="lbl">Řádek kasina v liště</span><input type="checkbox" id="casinoBar"></label>
+    <div class="auto-box">
+      <div class="row"><span class="lbl"><b>Automaticky sázet</b> (je i v liště)</span>
+        <select id="casinoAuto">
+          <option value="">vypnuto</option>
+          <option value="1">🔫 pistole</option>
+          <option value="2">❤️ srdce</option>
+          <option value="3">🔥 oheň</option>
+          <option value="slots">🎰 automat (#18)</option>
+          <option value="blackjack">🃏 blackjack (#18)</option>
+          <option value="poker">🂡 poker (#18)</option>
+        </select></div>
+      <div class="hint"><b>🎰 automat (#18)</b> je jiná hra než kuličky: točí se v budově 18 za částku ze sázky, maximální výhra je ×6, ale hra vyplácí i <b>méně než sázku</b> (viděné 4 a 5 při sázce 10). Proto se u něj <b>nenavyšuje po prohře</b> – martingale stojí na jedné výhře, která pokryje předchozí sázky, a to tady neplatí. Vložené a vyhrané se sčítá v panelu v záložce <b>Automat</b>.<br><br>
+      Sází <b>bez tvého kliknutí</b>, jedna sázka na tik (~5 s), s navyšováním a stropy podle nastavení níže. Platí hlavní vypínač <b>⏸</b> i zámek ve vězení.<br><br>
+      <b>Po vyčerpání pokusů se sám vypne.</b> Očekávaná hodnota je nula, takže automat nemá co optimalizovat – kdyby jel dál, opakoval by přesně tu ztrátu, proti které je strop pokusů postavený. Zapnout znovu je jeden klik.<br><br>
+      <b>Tohle je nejčastější důvod, proč se select „sám“ přepne na vypnuto:</b> při 6 pokusech se série vzdá v 8,8 % případů, tedy asi každá jedenáctá. Když chceš, aby to jelo dál, zapni volbu níže.</div>
+      <label class="row"><span class="lbl">Po vzdané série <b>pokračovat</b> (nevypínat se)</span><input type="checkbox" id="casinoAutoContinue"></label>
+      <div class="hint">Přechodná selhání (hra neodpověděla, chybí herní okno) automatiku <b>nevypínají</b> – zkusí to znovu a vypne se až po třech neúspěších za sebou.</div>
+      <label class="row"><span class="lbl"><b>Navyšovat po prohře</b> (je i v liště)</span><input type="checkbox" id="casinoProgress"></label>
+      <div class="row"><span class="lbl">Navýšit po prohře ×</span><input type="number" id="casinoStep" min="1" max="5" step="0.1"></div>
+      <div class="row"><span class="lbl">…platí pro prvních sázek (0 nebo 1 = celou sérii)</span><input type="number" id="casinoPhase1" min="0" max="30" step="1"></div>
+      <div class="row"><span class="lbl">…a od té další násobit ×</span><input type="number" id="casinoStep2" min="1" max="5" step="0.1"></div>
+      <div class="preview" id="casinoPreview"></div>
+      <div class="row"><span class="lbl">Rezerva špinavých peněz</span><input type="number" id="casinoReserve" min="0" step="1000"></div>
+      <div class="row"><span class="lbl">Maximální počet pokusů v sérii</span><input type="number" id="casinoMaxSteps" min="1" max="30" step="1"></div>
+      <div class="row"><span class="lbl">Strop na jednu sázku (0 = bez)</span><input type="number" id="casinoMax" min="0" step="1000"></div>
+      <div class="hint">Po každé prohře se vklad vynásobí, po výhře se vrátí na základní (ten se zadává přímo v liště). S vypnutým navyšováním se sází pořád základ – série se dál eviduje, ale na výši sázky nemá vliv. Přepínač je i v liště jako <b>×1,5</b>.<br><br>
+      <b>Pozor na počet sázek, ne kol navýšení:</b> „platí pro prvních 6 sázek“ znamená pět navýšení (1., 2., … 6. sázka), takže <b>1 znamená žádnou první fázi</b> – první sázka je vždycky základ. Když chceš „první kolo ×2, pak ×1,5“, zadej <b>×2 · 2 sázky · ×1,5</b>. Náhled výše vždy ukazuje, co z nastavení skutečně vyjde.<br><br>
+      <b>Dvě fáze:</b> první násobek platí pro zadaný počet sázek, pak se přepne na druhý. Má to jasnou logiku – <b>násobek nad 1,5 zisk série navyšuje</b>, přesně 1,5 ho jen drží. Takže <i>délka první fáze určuje výdělek</i> a přechod na 1,5 pak drží expozici co nejmenší. Příklad: vklad 5 100 Kč, prvních <b>6 kol ×2</b> a dál ×1,5 → zisk série skočí z 10 200 na <b>168 300 Kč</b>, ale expozice na 26 kol vyroste z 386 mil. na <b>1,63 mld.</b> (4,2× dražší). Nula v prostředním poli znamená jednu fázi na celou sérii.<br><br>
+      <b>×1,5 je matematická hranice.</b> Výplata je trojnásobek při šanci 1/3, takže aby výhra pokryla celou sérii, musí platit <code>2 × nová sázka &gt; dosud vsazeno</code> – z toho vychází násobek &gt; 1,5. Při ×1,5 je čistý zisk <b>+2× základní vklad</b>, ať výhra přijde v kterémkoli kroku. Při <b>×1,3</b> už od 4. kroku výhra ztrátu <b>nepokryje</b> a při ×1,4 od 5. – vypadá to bezpečněji, ale není.<br><br>
+      <b>Rezerva</b> je částka špinavých peněz, pod kterou sázka nesmí jít. Když by ji sázka porušila, tlačítka se vypnou a automatika se zastaví a čeká (nevypíná se – špinavé peníze mohou přitéct z výroby nebo zločinů). V liště je vidět <b>rezerva 5 mil.</b> a oranžově, když právě blokuje.<br><br>
+      <b>Počet pokusů</b> je to, co drží částku na uzdě: bez stropu je při ×1,5 třicátá sázka 128 tisíc základů a padesátá 425 milionů. Po vyčerpání pokusů se ztráta realizuje a jde se zas od základu. V liště je vidět <b>max 6× · 208 Kč</b> – tedy kolik celá série spolkne, když dojde do stropu (a to i před první sázkou).<br><br>
+      Při ×1,5 a základu 10 Kč: <b>4 pokusy</b> = 81 Kč a 19,8 % šance, že se prohrají všechny · <b>6 pokusů</b> = 208 Kč a 8,8 % · <b>10 pokusů</b> = 1 133 Kč a 1,7 % · <b>15 pokusů</b> = 8 738 Kč a 0,23 %.<br><br>
+      <b>Riziko:</b> šance na prohru je 2/3, takže série jsou běžné – 6× za sebou v 8,8 % případů, 10× za sebou v 1,7 % (1 z 58). Při ×1,5 je desátá sázka <b>57,7×</b> základ a celá série vyžaduje <b>171×</b> základ. Očekávaná hodnota zůstává nula: navyšování jen mění rozdělení na „hodně malých výher a občas velká ztráta“. <b>Strop</b> je pojistka – jen pozor, že zastropovaná série už ztrátu nedohoní.</div>
+    </div>
+    <div class="hint">Do lišty přidá řádek s výběrem sázky a třemi tvary (<b>🔫 ❤️ 🔥</b>). Klik na tvar zahraje jednu sázku za špinavé peníze a v liště se ukáže výsledek i průběžná bilance. <b>Výchozí vypnuto</b>, protože na rozdíl od ostatních řádků tady klik utrácí peníze.<br><br>
+    <b>Počítej s tím, že to nevydělává:</b> tři tvary, výplata trojnásobek, žádné poplatky → očekávaná hodnota je <b>přesně nula</b> (⅓ × +2 a ⅔ × −1). Dlouhodobě to není past, ale ani zdroj příjmu – jen rozptyl. Proto tu <b>není žádná automatika</b>: jeden tvůj klik = jedna sázka.<br><br>
+    Výsledek se čte z DOM (hra označí vítěznou kouli třídou <code>winner</code>), ne z rozdílu v HUD – špinavé peníze se mění i z jiných zdrojů, takže by to hlásilo výhru u prohry. Diamantová varianta v liště schválně není.</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Data</legend>
+    <div class="actions">
+      <button id="export">⬇ Záloha JSON</button>
+      <button id="importBtn">⬆ Obnovit</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json" hidden>
+    <div class="hint">Záloha obsahuje nastavení, historii i evidenci předmětů. Obnovení přepíše současná data.</div>
+  </fieldset>
+
+  <div class="actions"><button id="save" class="primary">Uložit nastavení</button></div>
+  <div class="ok" id="msg"></div>
+
+  <script src="src/store.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "czechmafie-companion-tests",
+  "private": true,
+  "description": "Testy rozšíření. NEJSOU v /tmp schválně: tam je macOS pravidelně mazal a coverage tichounce klesala (1902 → 1705 → 11 souborů).",
+  "dependencies": { "jsdom": "^26.0.0" }
+}

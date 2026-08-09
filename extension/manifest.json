@@ -1,0 +1,89 @@
+{
+  "manifest_version": 3,
+  "name": "CzechMafie Companion",
+  "version": "1.20.1",
+  "description": "Read-only pomocník ke hře czechmafie.cz: přehled stavu budov, ekonomická kalkulačka, historie majetku a evidence celkových nákladů na předměty. Neprovádí žádné herní akce.",
+  "permissions": [
+    "storage",
+    "alarms"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": [
+    "https://s1.czechmafie.cz/*",
+    "https://*.czechmafie.cz/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "CzechMafie Companion – nastavení"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://s1.czechmafie.cz/*",
+        "https://*.czechmafie.cz/*"
+      ],
+      "js": [
+        "src/store.js",
+        "src/queue.js",
+        "src/fmt.js",
+        "src/parse.js",
+        "src/econ.js",
+        "src/history.js",
+        "src/items.js",
+        "src/market.js",
+        "src/prijmy.js",
+        "src/ui.js",
+        "src/chart.js",
+        "src/tab-stav.js",
+        "src/tab-doprava.js",
+        "src/tab-historie.js",
+        "src/tab-predmety.js",
+        "src/tab-trh.js",
+        "src/tab-automat.js",
+        "src/tab-blackjack.js",
+        "src/tab-poker.js",
+        "src/tab-prijmy.js",
+        "src/auction.js",
+        "src/jail.js",
+        "src/uspor.js",
+        "src/captcha.js",
+        "src/reload.js",
+        "src/upgrade.js",
+        "src/attack.js",
+        "src/gym.js",
+        "src/fleet.js",
+        "src/crimes.js",
+        "src/mines.js",
+        "src/farm.js",
+        "src/work.js",
+        "src/brothel.js",
+        "src/rps.js",
+        "src/bank.js",
+        "src/vyrobny.js",
+        "src/casino.js",
+        "src/slots.js",
+        "src/blackjack.js",
+        "src/poker.js",
+        "src/panel.js",
+        "content.js"
+      ],
+      "css": [
+        "panel.css"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://s1.czechmafie.cz/*",
+        "https://*.czechmafie.cz/*"
+      ],
+      "js": [
+        "src/main-world.js"
+      ],
+      "run_at": "document_idle",
+      "world": "MAIN"
+    }
+  ]
+}

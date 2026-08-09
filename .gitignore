@@ -1,0 +1,11 @@
+# závislosti testů – 16 MB, instalují se přes `npm install` v tests/
+tests/node_modules/
+
+# macOS
+.DS_Store
+
+# zabalené rozšíření (build, ne zdroj)
+extension.zip
+
+# starší kopie rozšíření (v1.10.0), zůstává jen lokálně jako záloha
+extension 2/

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sázková kalkulačka – martingale (3× výhra)</title>
+<style>
+  :root {
+    --bg: #17100e;
+    --panel: #221512;
+    --border: #4a251d;
+    --accent: #b23b2c;
+    --accent2: #d4a13a;
+    --text: #f4e9d8;
+    --muted: #b39c86;
+    --ok: #6fd07f;
+    --bad: #ff7a68;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px 16px 60px;
+    font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(1200px 500px at 50% -100px, #33110c, var(--bg));
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h1 .d { color: var(--accent2); }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 22px; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 18px 6px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.4);
+  }
+  form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px 18px;
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+  label { font-size: 12px; color: var(--muted); font-weight: 600; }
+  input {
+    padding: 9px 10px;
+    font-size: 15px;
+    color: var(--text);
+    background: #140c0a;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    outline: none;
+  }
+  input:focus { border-color: var(--accent2); }
+  .hint { font-size: 11px; color: #8f7c68; }
+
+  .actions { grid-column: 1 / -1; display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+  button {
+    padding: 11px 22px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(180deg, #c9432f, #8f2b1e);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  button:hover { filter: brightness(1.08); }
+  button.ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin: 22px 0 10px;
+  }
+  .tile { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .tile .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  .tile .v { font-size: 20px; font-weight: 700; margin-top: 3px; }
+  .tile .v.bad { color: var(--bad); }
+  .tile .v.ok { color: var(--ok); }
+
+  .table-scroll { overflow-x: auto; margin-top: 8px; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 9px 12px; text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: center; }
+  thead th {
+    position: sticky; top: 0;
+    background: #2c1a15;
+    color: var(--accent2);
+    font-size: 12px;
+    border-bottom: 2px solid var(--border);
+  }
+  tbody tr { border-bottom: 1px solid #2a1813; }
+  tbody tr:nth-child(even) { background: rgba(255,255,255,.02); }
+  tbody tr:hover { background: rgba(212,161,58,.07); }
+  td.profit { color: var(--ok); font-weight: 700; }
+  td.risk { color: var(--bad); }
+  .num { font-weight: 600; }
+
+  .note {
+    margin-top: 22px; font-size: 12px; color: var(--muted);
+    border-left: 3px solid var(--border); padding: 4px 0 4px 12px;
+  }
+  .note b { color: var(--text); }
+  code { background:#140c0a; padding:1px 5px; border-radius:4px; color:var(--accent2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Sázková kalkulačka <span class="d">◆ martingale</span></h1>
+  <div class="sub">Výhra = násobek vkladu. Po prohře dopočítá sázku tak, abys po výhře pokryl všechny předchozí náklady a byl v plusu.</div>
+
+  <div class="card">
+    <form id="form">
+      <div class="field">
+        <label for="base">Základní (min.) sázka ◆</label>
+        <input type="number" id="base" value="10" min="1" step="1">
+        <span class="hint">minimum ve hře je 10</span>
+      </div>
+      <div class="field">
+        <label for="rounds">Počet kol (kolik proher pokrýt)</label>
+        <input type="number" id="rounds" value="12" min="1" max="100" step="1">
+      </div>
+      <div class="field">
+        <label for="step">Navýšení sázky každé kolo (%)</label>
+        <input type="number" id="step" value="0" min="0" step="1">
+        <span class="hint">0 = jen matematické minimum</span>
+      </div>
+      <div class="field">
+        <label for="maxStepAbs">Max. navýšení za kolo ◆</label>
+        <input type="number" id="maxStepAbs" value="100" min="0" step="1">
+        <span class="hint">strop přírůstku sázky (0 = bez limitu)</span>
+      </div>
+      <div class="field">
+        <label for="dropFrom">Od kterého kola zase snižovat</label>
+        <input type="number" id="dropFrom" value="0" min="0" step="1">
+        <span class="hint">0 = nikdy neklesá</span>
+      </div>
+      <div class="field">
+        <label for="dropStep">Procentuální pokles každé kolo (%)</label>
+        <input type="number" id="dropStep" value="20" min="0" step="1">
+        <span class="hint">tempo klesání sázky po zlomu</span>
+      </div>
+      <div class="field">
+        <label for="target">Cílový čistý zisk při výhře ◆</label>
+        <input type="number" id="target" placeholder="auto" step="1">
+        <span class="hint">prázdné = auto (zisk z 1. kola)</span>
+      </div>
+      <div class="actions">
+        <button type="submit">Spočítat tabulku</button>
+        <button type="button" class="ghost" id="reset">Výchozí</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="out"></div>
+
+  <div class="note">
+    <b>Jak se sázka počítá:</b> aby po výhře v kole <i>k</i> zbyl zisk aspoň <i>P</i>, musí platit
+    <code>vklad_k = ⌈(náklady_dosud + P) / (násobek − 1)⌉</code>.
+    Diamanty se zaokrouhlují nahoru, proto může být zisk o pár ◆ vyšší než cíl.
+    <br><br>
+    <b>Pozor:</b> „náklady celkem" je i tvá <b>maximální ztráta</b>, pokud prohraješ i dané kolo.
+    Progrese roste rychle — vždy si ohlídej, kolik kol si můžeš dovolit.
+  </div>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  function fmt(n) {
+    return Math.round(n).toLocaleString('cs-CZ');
+  }
+
+  function calc() {
+    const base   = Math.max(1, Math.floor(+$('base').value || 10));
+    const mult   = 3;   // výhra je vždy 3× vkladu
+    const rounds = Math.min(100, Math.max(1, Math.floor(+$('rounds').value || 12)));
+    const step       = Math.max(0, +$('step').value || 0) / 100;   // navýšení sázky za kolo
+    const maxStepAbs = Math.max(0, +$('maxStepAbs').value || 0);   // strop přírůstku sázky/kolo (0 = bez limitu)
+    const dropFrom = Math.max(0, Math.floor(+$('dropFrom').value || 0)); // od kola snižovat (0 = nikdy)
+    const dropStep = Math.max(0, +$('dropStep').value || 0) / 100;       // tempo procentuálního poklesu
+    // cílový zisk: buď zadaný, nebo auto = zisk z prvního kola
+    const targetRaw = $('target').value.trim();
+    const target = targetRaw === '' ? base * (mult - 1) : Math.max(1, +targetRaw);
+
+    const rows = [];
+    let cumCost = 0;       // kumulativní náklady (součet všech sázek)
+    let minProfit = Infinity, maxProfit = -Infinity;
+
+    for (let k = 1; k <= rounds; k++) {
+      let bet;
+      const falling = dropFrom > 0 && k >= dropFrom;
+
+      if (k === 1) {
+        bet = base;                                   // 1. kolo = minimální sázka
+      } else if (falling) {
+        // OD zlomového kola klesá cílový ČISTÝ ZISK – lineárně o dropStep % z cíle,
+        // klidně přes nulu do mínusu. Sázka se dopočítá tak, aby zisk vyšel na P.
+        const n = k - dropFrom + 1;                   // kolikáté klesající kolo
+        const P = target * (1 - n * dropStep);
+        bet = Math.ceil((cumCost + P) / (mult - 1));
+        if (bet < base) bet = base;                   // sázka nikdy pod herní minimum
+      } else {
+        // PŘED zlomem zisk drží na cíli. Sázka = martingale minimum + volitelný polštář.
+        const minBet = (cumCost + target) / (mult - 1);
+        let inc = Math.ceil(minBet * (1 + step)) - Math.ceil(minBet); // polštář nad minimum
+        if (maxStepAbs > 0 && inc > maxStepAbs) inc = maxStepAbs;     // strop jen na polštář
+        bet = Math.ceil(minBet) + inc;
+        if (bet < base) bet = base;
+      }
+
+      cumCost += bet;
+      const win = bet * mult;                          // výhra při úspěchu v tomto kole
+      const profit = win - cumCost;                    // čistý zisk (výhra − všechny náklady)
+      minProfit = Math.min(minProfit, profit);
+      maxProfit = Math.max(maxProfit, profit);
+      rows.push({ k, bet, cumCost, win, profit });
+    }
+
+    return { rows, base, mult, target, minProfit, maxProfit, maxLoss: cumCost };
+  }
+
+  function render() {
+    const r = calc();
+    const tiles = `
+      <div class="summary">
+        <div class="tile"><div class="k">Cílový zisk / kolo</div><div class="v ok">◆ ${fmt(r.target)}</div></div>
+        <div class="tile"><div class="k">Zisk při výhře</div><div class="v ${r.minProfit < 0 ? 'bad' : 'ok'}">◆ ${fmt(r.minProfit)} – ${fmt(r.maxProfit)}</div></div>
+        <div class="tile"><div class="k">Nutný kapitál (${r.rows.length} kol)</div><div class="v">◆ ${fmt(r.maxLoss)}</div></div>
+        <div class="tile"><div class="k">Max. ztráta (prohra všech kol)</div><div class="v bad">◆ −${fmt(r.maxLoss)}</div></div>
+      </div>`;
+
+    const body = r.rows.map(row => `
+      <tr>
+        <td>${row.k}</td>
+        <td class="num">◆ ${fmt(row.bet)}</td>
+        <td class="num">◆ ${fmt(row.cumCost)}</td>
+        <td class="num">◆ ${fmt(row.win)}</td>
+        <td class="${row.profit < 0 ? 'risk' : 'profit'}">${row.profit < 0 ? '−' : '+'}${fmt(Math.abs(row.profit))}</td>
+        <td class="risk">−${fmt(row.cumCost)}</td>
+      </tr>`).join('');
+
+    $('out').innerHTML = tiles + `
+      <div class="card table-scroll" style="padding:0">
+        <table>
+          <thead>
+            <tr>
+              <th>Kolo</th>
+              <th>Vklad (sázka)</th>
+              <th>Náklady celkem</th>
+              <th>Výhra (${r.mult}×)</th>
+              <th>Čistý zisk</th>
+              <th>Ztráta když prohraješ</th>
+            </tr>
+          </thead>
+          <tbody>${body}</tbody>
+        </table>
+      </div>`;
+  }
+
+  $('form').addEventListener('submit', e => { e.preventDefault(); render(); });
+  // živý přepočet při jakékoli změně pole (není nutné mačkat tlačítko)
+  document.querySelectorAll('#form input').forEach(el => el.addEventListener('input', render));
+  $('reset').addEventListener('click', () => {
+    $('base').value = 10; $('rounds').value = 12; $('step').value = 0; $('maxStepAbs').value = 100;
+    $('dropFrom').value = 0; $('dropStep').value = 20; $('target').value = '';
+    render();
+  });
+
+  render(); // výchozí zobrazení
+</script>
+</body>
+</html>

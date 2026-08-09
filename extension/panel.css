@@ -1,0 +1,1269 @@
+/* =============================================================================
+ * panel.css – styl panelu v UI hry
+ *
+ * Panel je vždy tmavý (sedí do vzhledu hry), takže barvy sérií jsou dark
+ * varianty kategoriální palety, zvalidované proti povrchu #1c110e.
+ * ===========================================================================*/
+
+#cmc-panel.cmc-panel {
+  --surface: #1c110e;
+  --surface-2: #241612;
+  --surface-3: #2e1c16;
+  --line: #4a251d;
+  --text: #f4e9d8;
+  --muted: #b39c86;
+  --accent: #d4a13a;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --good: #199e70;
+  --bad: #e66767;
+
+  position: fixed;
+  top: 90px;
+  right: 12px;
+  z-index: 2147483000;
+  /*
+   * 420, ne 340: tabulka předmětů má sloupec na každý stat (síla/obrana/rychlost/
+   * štěstí) a v 340 px se hlavičky lámaly nebo se sloupce slévaly.
+   */
+  width: 420px;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.65);
+  overflow: hidden;
+}
+
+/* ---- hlavička ---- */
+#cmc-panel .cmc-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: linear-gradient(180deg, #6e1f14, #3a1009);
+  cursor: move;
+  user-select: none;
+  flex: 0 0 auto;
+}
+#cmc-panel .cmc-brand { font-weight: 700; letter-spacing: 0.2px; }
+#cmc-panel .cmc-version { font-size: 10px; opacity: 0.75; }
+#cmc-panel .cmc-mini {
+  flex: 1;
+  font-size: 10px;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.9;
+}
+#cmc-panel:not(.cmc-collapsed) .cmc-mini { display: none; }
+#cmc-panel:not(.cmc-collapsed) .cmc-version { flex: 1; }
+#cmc-panel .cmc-icon {
+  cursor: pointer;
+  padding: 0 5px;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 18px;
+}
+#cmc-panel .cmc-icon:hover { background: rgba(255, 255, 255, 0.14); }
+
+#cmc-panel.cmc-collapsed .cmc-tabs,
+#cmc-panel.cmc-collapsed .cmc-body,
+#cmc-panel.cmc-collapsed .cmc-foot { display: none; }
+
+/* ---- záložky ---- */
+/*
+ * !!! ZÁLOŽKY SE MUSÍ ZABALIT, JINAK POSLEDNÍ ZMIZÍ !!!
+ * Bylo tu `flex: 1`, tedy `flex-basis: 0` – všechny záložky se tím vždycky
+ * vejdou na JEDEN řádek a jen se zúží. Text se ale nezúží, takže od devíté
+ * záložky obsah přetekl (naměřeno 428 px do šířky 338) a protože panel má
+ * `overflow: hidden`, byla poslední záložka odříznutá ZA hranou – bez posuvníku
+ * a bez jakéhokoli vodítka, že tam vůbec je. Přesně takhle se „ztratila“ karta
+ * Trh a vypadalo to, že se nepřidala.
+ *
+ * `flex-wrap` + `flex-basis: auto` to řeší: záložka si vezme šířku podle textu
+ * a co se nevejde, přeteče na další řádek. Devět záložek se srovná na dva.
+ */
+#cmc-panel .cmc-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 6px 6px 0;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+#cmc-panel .cmc-tab {
+  flex: 1 1 auto;
+  white-space: nowrap;
+  padding: 6px 4px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 4px 4px 0 0;
+  cursor: pointer;
+}
+#cmc-panel .cmc-tab:hover { color: var(--text); background: rgba(255, 255, 255, 0.05); }
+#cmc-panel .cmc-tab-on { color: var(--text); font-weight: 700; border-bottom-color: var(--accent); }
+#cmc-panel .cmc-tabs-sub { padding: 0; margin: 6px 0; background: transparent; border: none; }
+#cmc-panel .cmc-tabs-sub .cmc-tab { font-size: 10px; padding: 3px 2px; }
+
+/* ---- tělo ---- */
+#cmc-panel .cmc-body {
+  padding: 10px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+#cmc-panel .cmc-body::-webkit-scrollbar { width: 8px; }
+#cmc-panel .cmc-body::-webkit-scrollbar-thumb { background: #4a251d; border-radius: 4px; }
+
+#cmc-panel .cmc-foot {
+  padding: 5px 10px;
+  font-size: 10px;
+  color: var(--muted);
+  background: var(--surface-2);
+  border-top: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+
+/* ---- dlaždice a mřížka ---- */
+#cmc-panel .cmc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 8px;
+  margin-bottom: 8px;
+}
+#cmc-panel .cmc-tile {
+  padding: 7px 9px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+#cmc-panel .cmc-tile-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+#cmc-panel .cmc-tile-value { font-size: 16px; font-weight: 700; margin: 1px 0; }
+#cmc-panel .cmc-tile-sub { font-size: 10px; color: var(--muted); }
+
+/* ---- karty ---- */
+#cmc-panel .cmc-card {
+  padding: 8px 9px;
+  margin-bottom: 7px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--line);
+  border-radius: 7px;
+}
+#cmc-panel .cmc-card-ready { border-left-color: var(--good); }
+#cmc-panel .cmc-card-err { border-left-color: var(--bad); }
+#cmc-panel .cmc-card-muted { opacity: 0.62; }
+#cmc-panel .cmc-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+#cmc-panel .cmc-card-title { font-weight: 700; flex: 1; }
+#cmc-panel .cmc-card-id { font-size: 10px; color: var(--muted); }
+#cmc-panel .cmc-card-total { font-weight: 700; color: var(--accent); }
+#cmc-panel .cmc-clickable { cursor: pointer; }
+#cmc-panel .cmc-caret { color: var(--muted); font-size: 10px; }
+#cmc-panel .cmc-item-sum { display: flex; flex-direction: column; gap: 1px; font-size: 10px; }
+
+#cmc-panel .cmc-badge {
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 9px;
+  background: var(--surface-3);
+  color: var(--muted);
+}
+#cmc-panel .cmc-badge-ready { background: rgba(25, 158, 112, 0.18); color: #62d3ab; }
+#cmc-panel .cmc-badge-muted { background: var(--surface-3); color: var(--muted); }
+
+/* ---- ukazatel průběhu ---- */
+#cmc-panel .cmc-progress { display: flex; align-items: center; gap: 6px; margin: 4px 0 6px; }
+#cmc-panel .cmc-meter {
+  flex: 1;
+  height: 6px;
+  background: var(--surface-3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+#cmc-panel .cmc-meter-fill {
+  height: 100%;
+  background: var(--series-1);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+#cmc-panel .cmc-meter-ready .cmc-meter-fill { background: var(--good); }
+#cmc-panel .cmc-progress-num { font-size: 10px; color: var(--muted); min-width: 30px; text-align: right; }
+
+/* ---- fakta a řádky ---- */
+#cmc-panel .cmc-facts { display: flex; flex-wrap: wrap; gap: 3px 10px; }
+#cmc-panel .cmc-fact { display: flex; gap: 4px; font-size: 11px; }
+#cmc-panel .cmc-fact-k { color: var(--muted); }
+#cmc-panel .cmc-fact-v { font-variant-numeric: tabular-nums; }
+
+#cmc-panel .cmc-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+  border-bottom: 1px dotted rgba(179, 156, 134, 0.18);
+}
+#cmc-panel .cmc-row:last-child { border-bottom: none; }
+#cmc-panel .cmc-row-k { color: var(--muted); }
+#cmc-panel .cmc-row-v { font-variant-numeric: tabular-nums; text-align: right; }
+#cmc-panel .cmc-strong .cmc-row-v { font-weight: 700; font-size: 13px; }
+#cmc-panel .cmc-good .cmc-row-v, #cmc-panel .cmc-good { color: #62d3ab; }
+#cmc-panel .cmc-bad .cmc-row-v, #cmc-panel .cmc-bad { color: var(--bad); }
+
+/* ---- sekce ---- */
+#cmc-panel .cmc-section { margin: 8px 0; }
+#cmc-panel .cmc-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+#cmc-panel .cmc-subsection {
+  padding: 6px 0 2px;
+  border-top: 1px dotted rgba(179, 156, 134, 0.18);
+}
+#cmc-panel .cmc-note { font-size: 10px; color: var(--muted); margin: 4px 0; }
+/* zásoba materiálu – hlavní odpověď na „musím brzy kupovat?“ */
+#cmc-panel .cmc-supply {
+  margin-top: 5px;
+  padding: 5px 7px;
+  background: var(--surface-3);
+  border-radius: 5px;
+}
+#cmc-panel .cmc-supply-head { font-size: 10px; color: var(--muted); }
+#cmc-panel .cmc-supply-ok { font-size: 11px; margin-top: 2px; }
+#cmc-panel .cmc-supply-warn {
+  margin-top: 2px;
+  font-size: 11px;
+  color: #f2c14e;
+}
+#cmc-panel .cmc-supply .cmc-note { margin-bottom: 0; }
+
+#cmc-panel .cmc-verdict {
+  margin-top: 4px;
+  padding: 4px 6px;
+  font-size: 11px;
+  background: var(--surface-3);
+  border-radius: 5px;
+  border-left: 2px solid var(--series-1);
+}
+#cmc-panel .cmc-error {
+  padding: 5px 7px;
+  margin: 4px 0;
+  font-size: 11px;
+  color: #ffb3a8;
+  background: rgba(230, 103, 103, 0.12);
+  border: 1px solid rgba(230, 103, 103, 0.35);
+  border-radius: 5px;
+}
+
+/* ---- formuláře ---- */
+#cmc-panel .cmc-field { display: flex; flex-direction: column; gap: 2px; }
+#cmc-panel .cmc-field-label { font-size: 10px; color: var(--muted); }
+#cmc-panel .cmc-input {
+  width: 100%;
+  padding: 5px 6px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  background: #140c0a;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  outline: none;
+  box-sizing: border-box;
+}
+#cmc-panel .cmc-input:focus { border-color: var(--accent); }
+#cmc-panel select.cmc-input { cursor: pointer; }
+#cmc-panel .cmc-hint { font-size: 9px; color: #8f7c68; }
+#cmc-panel .cmc-readonly {
+  padding: 5px 6px;
+  font-size: 11px;
+  color: var(--muted);
+  background: rgba(25, 158, 112, 0.08);
+  border: 1px dashed rgba(25, 158, 112, 0.35);
+  border-radius: 5px;
+}
+#cmc-panel .cmc-section-title .cmc-badge { margin-left: 6px; text-transform: none; }
+
+#cmc-panel .cmc-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 7px 0; }
+#cmc-panel .cmc-btn {
+  flex: 1;
+  min-width: 92px;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface-3);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  cursor: pointer;
+}
+#cmc-panel .cmc-btn:hover:not(:disabled) { border-color: var(--accent); }
+#cmc-panel .cmc-btn:disabled { opacity: 0.5; cursor: default; }
+#cmc-panel .cmc-btn-primary { background: #6e1f14; border-color: #8c2b1c; }
+#cmc-panel .cmc-btn-danger { background: rgba(230, 103, 103, 0.2); border-color: var(--bad); color: #ffb3a8; }
+#cmc-panel .cmc-x {
+  padding: 0 5px;
+  font: inherit;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+#cmc-panel .cmc-x:hover { color: var(--bad); }
+
+#cmc-panel .cmc-check {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 0;
+  font-size: 11px;
+  cursor: pointer;
+}
+#cmc-panel .cmc-filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px 8px;
+  align-items: end;
+  margin: 6px 0 8px;
+}
+#cmc-panel .cmc-filters .cmc-check { grid-column: 1 / -1; }
+
+/* ---- tabulka (zároveň textová alternativa ke grafu) ---- */
+#cmc-panel .cmc-table { font-size: 11px; }
+#cmc-panel .cmc-tr {
+  display: flex;
+  gap: 6px;
+  padding: 2px 0;
+  border-bottom: 1px dotted rgba(179, 156, 134, 0.15);
+}
+#cmc-panel .cmc-tr > span:first-child { flex: 0 0 74px; color: var(--muted); }
+#cmc-panel .cmc-tr > span { flex: 1; font-variant-numeric: tabular-nums; }
+#cmc-panel .cmc-th { font-weight: 700; color: var(--muted); border-bottom: 1px solid var(--line); }
+#cmc-panel .cmc-th > span:first-child { color: var(--muted); }
+#cmc-panel .cmc-strong-cell { font-weight: 700; }
+
+/* ---- grafy ---- */
+#cmc-panel .cmc-chart {
+  position: relative;
+  margin: 8px 0;
+  padding: 7px 8px 5px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+#cmc-panel .cmc-chart-head { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; }
+#cmc-panel .cmc-chart-title { font-size: 11px; font-weight: 700; }
+#cmc-panel .cmc-chart-note { font-size: 9px; color: var(--muted); }
+#cmc-panel .cmc-chart-empty { font-size: 10px; color: var(--muted); padding: 6px 0; }
+#cmc-panel .cmc-svg { display: block; width: 100%; height: 92px; }
+#cmc-panel .cmc-axis { display: flex; justify-content: space-between; font-size: 9px; color: var(--muted); }
+
+#cmc-panel .cmc-bars { display: flex; flex-direction: column; gap: 4px; }
+#cmc-panel .cmc-bar-row { display: flex; align-items: center; gap: 6px; }
+#cmc-panel .cmc-bar-label { flex: 0 0 76px; font-size: 10px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#cmc-panel .cmc-bar-track { flex: 1; }
+#cmc-panel .cmc-bar-svg { display: block; width: 100%; height: 12px; }
+#cmc-panel .cmc-bar-value { flex: 0 0 auto; font-size: 10px; font-variant-numeric: tabular-nums; }
+
+#cmc-panel .cmc-tip {
+  position: absolute;
+  z-index: 5;
+  padding: 4px 7px;
+  font-size: 10px;
+  background: #140c0a;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  white-space: nowrap;
+}
+#cmc-panel .cmc-tip-row { display: flex; gap: 8px; justify-content: space-between; }
+#cmc-panel .cmc-tip-k { color: var(--muted); }
+#cmc-panel .cmc-tip-v { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+#cmc-panel .cmc-list { margin-top: 4px; }
+#cmc-panel .cmc-out { margin-top: 4px; }
+
+/* =============================================================================
+ * Lišta pro vyplnění sázky v aukci. Je mimo #cmc-panel (vkládá se do UI hry),
+ * proto vlastní prefix a konzervativní styl – ať nepřebíjí vzhled hry.
+ * ===========================================================================*/
+.cmc-bid-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 4px 0 2px;
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  font-size: 10px;
+  color: #b39c86;
+}
+.cmc-bid-btn {
+  padding: 2px 6px;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  color: #f4e9d8;
+  background: #2e1c16;
+  border: 1px solid #4a251d;
+  border-radius: 5px;
+  cursor: pointer;
+  line-height: 1.4;
+}
+.cmc-bid-btn:hover { border-color: #d4a13a; background: #3a231b; }
+.cmc-bid-btn:active { transform: translateY(1px); }
+
+/* =============================================================================
+ * Lišta posilovny. Obsahuje VLASTNÍ tlačítka, která přepošlou klik na tlačítko
+ * hry (to zůstává na svém místě v sekci).
+ * ===========================================================================*/
+/*
+ * O kolik je lišta zvednutá od spodní hrany. Je to jedno číslo schválně: mění se
+ * s ním i odsazení stránky (`body.cmc-gym-padded`), aby lišta nikdy nepřekryla
+ * obsah hry.
+ */
+:root { --cmc-gym-lift: 65px; }
+
+#cmc-gym-bar {
+  /* vlevo, zvednutá od spodní hrany – ať nepřekrývá střed obrazovky ani panel hry */
+  position: fixed;
+  left: 60px;
+  bottom: var(--cmc-gym-lift, 65px);
+  z-index: 2147482000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /*
+   * PEVNÁ ŠÍŘKA. Dřív se lišta roztahovala podle obsahu, takže s každou změnou
+   * hlášky („poker: výhra…“, „banka: ukládám…“) poskočilo ovládání vpravo
+   * jinam a nedalo se trefit do pauzy ani do křížku. Teď drží šířku bez ohledu
+   * na to, co se v ní zrovna píše; delší text se ořízne třemi tečkami.
+   */
+  width: min(1180px, calc(100vw - 80px));
+  padding: 7px 10px 8px;
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  color: #f4e9d8;
+  background: rgba(28, 17, 14, 0.97);
+  border: 1px solid #4a251d;
+  border-radius: 12px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55);
+  transition: padding 0.15s ease;
+}
+/* řádky pod sebou: trénink, letadla */
+#cmc-gym-bar .cmc-gym-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  /* `min-width: 0` + `flex: 1` drží řádky uvnitř pevné šířky lišty */
+  flex: 1 1 auto;
+  min-width: 0;
+}
+#cmc-gym-bar .cmc-gym-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+#cmc-gym-bar .cmc-gym-row + .cmc-gym-row {
+  padding-top: 5px;
+  border-top: 1px solid #4a251d;
+}
+
+/* dočasně skryto: zůstane jen úchyt se šipkou */
+#cmc-gym-bar.cmc-gym-hidden {
+  padding: 4px 6px 5px;
+  /* plná viditelnost: zmenšený úchyt je jediná cesta lištu zas rozbalit */
+  opacity: 1;
+  /* zmenšená lišta se scvrkne na úchyt, takže pevná šířka odpadá */
+  width: auto;
+}
+#cmc-gym-bar.cmc-gym-hidden .cmc-gym-rows,
+#cmc-gym-bar.cmc-gym-hidden .cmc-gym-master { display: none; }
+
+#cmc-gym-bar .cmc-gym-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+#cmc-gym-bar .cmc-gym-group + .cmc-gym-group {
+  padding-left: 6px;
+  border-left: 1px solid #4a251d;
+}
+/*
+ * Ovládání lišty (vypínač, minimalizace, zavření) drží pravý dolní kout.
+ * `margin-left: auto` ho odtlačí od obsahu, takže nepřeskakuje podle toho,
+ * kolik je zrovna v liště tlačítek – najdeš ho pořád na stejném místě.
+ */
+#cmc-gym-bar .cmc-gym-ctrl {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  padding-left: 8px;
+  /* pravý HORNÍ kout – kde ho člověk hledá u každého okna */
+  align-self: flex-start;
+  border-left: 1px solid #4a251d;
+}
+/* ve zmenšené liště zůstává jen úchyt, takže žádné oddělení netřeba */
+#cmc-gym-bar.cmc-gym-hidden .cmc-gym-ctrl {
+  margin-left: 0;
+  padding-left: 0;
+  border-left: 0;
+}
+
+/*
+ * Minimalizace je po zrušení křížku JEDINÉ ovládání lišty, tak je vidět: čtverec
+ * 26 px s rámečkem, ne šipka o velikosti textu. Dřív to bylo 13px písmo bez
+ * pozadí hned vedle „×“ a trefit se dalo špatně.
+ */
+#cmc-gym-bar .cmc-gym-toggle {
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+  color: #d9c3a5;
+  background: #2e1c16;
+  border: 1px solid #4a251d;
+  border-radius: 6px;
+  cursor: pointer;
+}
+#cmc-gym-bar .cmc-gym-toggle:hover {
+  color: #f4e9d8;
+  background: #3d241c;
+  border-color: #d4a13a;
+}
+/*
+ * Ve zmenšeném stavu je to jediný prvek na obrazovce – kdyby zůstal malý, hráč
+ * ho na herní mapě nenajde. Proto výrazně větší a se zlatým rámečkem.
+ */
+#cmc-gym-bar .cmc-gym-toggle.cmc-gym-toggle-big {
+  min-width: 44px;
+  height: 38px;
+  font-size: 24px;
+  color: #1c110e;
+  background: #d4a13a;
+  border-color: #f0c268;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+#cmc-gym-bar .cmc-gym-toggle.cmc-gym-toggle-big:hover {
+  color: #1c110e;
+  background: #f0c268;
+}
+body.cmc-gym-padded { padding-bottom: calc(46px + var(--cmc-gym-lift, 65px)) !important; }
+/* dva řádky (trénink + letadla) potřebují víc místa */
+body.cmc-gym-padded:has(#cmc-gym-bar .cmc-gym-row + .cmc-gym-row) { padding-bottom: calc(82px + var(--cmc-gym-lift, 65px)) !important; }
+body.cmc-gym-padded:has(#cmc-gym-bar .cmc-gym-row + .cmc-gym-row + .cmc-gym-row) { padding-bottom: calc(118px + var(--cmc-gym-lift, 65px)) !important; }
+body.cmc-gym-padded:has(#cmc-gym-bar .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row) { padding-bottom: calc(154px + var(--cmc-gym-lift, 65px)) !important; }
+body.cmc-gym-padded:has(#cmc-gym-bar .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row) { padding-bottom: calc(190px + var(--cmc-gym-lift, 65px)) !important; }
+body.cmc-gym-padded:has(#cmc-gym-bar .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row) { padding-bottom: calc(226px + var(--cmc-gym-lift, 65px)) !important; }
+body.cmc-gym-padded:has(#cmc-gym-bar .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row) { padding-bottom: calc(262px + var(--cmc-gym-lift, 65px)) !important; }
+body.cmc-gym-padded:has(#cmc-gym-bar .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row) { padding-bottom: calc(298px + var(--cmc-gym-lift, 65px)) !important; }
+body.cmc-gym-padded:has(#cmc-gym-bar .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row) { padding-bottom: calc(334px + var(--cmc-gym-lift, 65px)) !important; }
+body.cmc-gym-padded:has(#cmc-gym-bar .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row) { padding-bottom: calc(370px + var(--cmc-gym-lift, 65px)) !important; }
+body.cmc-gym-padded:has(#cmc-gym-bar .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row + .cmc-gym-row) { padding-bottom: calc(406px + var(--cmc-gym-lift, 65px)) !important; }
+/* úchyt je teď 38 px vysoký, tak se pod ním nechá o něco víc místa */
+body.cmc-gym-padded:has(#cmc-gym-bar.cmc-gym-hidden) { padding-bottom: calc(50px + var(--cmc-gym-lift, 65px)) !important; }
+
+#cmc-gym-bar .cmc-gym-label {
+  /* stejná šířka v obou řádcích, ať jsou tlačítka pod sebou */
+  min-width: 58px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #b39c86;
+}
+#cmc-gym-bar .cmc-gym-btn {
+  /* pevná šířka: popisek se nemění, takže lišta nikdy nepřeskládá */
+  min-width: 78px;
+  text-align: center;
+  padding: 4px 12px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: #f4e9d8;
+  background: #6e1f14;
+  border: 1px solid #8c2b1c;
+  border-radius: 6px;
+  cursor: pointer;
+}
+#cmc-gym-bar .cmc-gym-btn:hover { border-color: #d4a13a; background: #7d2418; }
+#cmc-gym-bar .cmc-gym-btn-link {
+  background: #2e1c16;
+  border-color: #4a251d;
+  font-weight: 500;
+  opacity: 0.9;
+}
+#cmc-gym-bar .cmc-gym-btn-link:hover { background: #3a231b; }
+#cmc-gym-bar .cmc-gym-btn:active { transform: translateY(1px); }
+
+/*
+ * Letadla a lodě: na tlačítku je jen L1 / S1, stav nese barva – jinak by se
+ * celá flotila do lišty nevešla. Slovní popis je v tooltipu tlačítka, v legendě
+ * na popisku řádku a po akci se vypíše v liště.
+ */
+#cmc-gym-bar .cmc-gym-unit {
+  min-width: 0;
+  padding: 4px 9px;
+  font-variant-numeric: tabular-nums;
+}
+/* přivezlo peníze – zeleně */
+#cmc-gym-bar .cmc-gym-unit-ready {
+  background: #17553f;
+  border-color: #199e70;
+}
+#cmc-gym-bar .cmc-gym-unit-ready:hover { background: #1c6b4e; border-color: #62d3ab; }
+/* dá se vypravit – vínově jako ostatní akční tlačítka lišty */
+#cmc-gym-bar .cmc-gym-unit-send { background: #6e1f14; border-color: #8c2b1c; }
+/* je venku – šedě a vypnuté (kurzor to potvrdí i bez barvy) */
+#cmc-gym-bar .cmc-gym-unit-away {
+  background: #2a1a15;
+  border-color: #3d211a;
+  color: #8f7c68;
+}
+/* náklad nebude plný – oranžový rámeček, ale pořád je to funkční volba */
+#cmc-gym-bar .cmc-gym-unit-partial { border-color: #d95926; }
+#cmc-gym-bar .cmc-gym-unit-partial:hover { border-color: #f0764a; }
+#cmc-gym-bar .cmc-gym-unit:disabled { cursor: default; }
+/* „auto“ na konci řádku letadel / lodí – klikne bez uživatele, ať je to vidět */
+#cmc-gym-bar .cmc-gym-auto-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 4px;
+  padding: 2px 5px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #8f7c68;
+  border: 1px solid #4a251d;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+#cmc-gym-bar .cmc-gym-auto-box:hover { border-color: #d4a13a; color: #b39c86; }
+#cmc-gym-bar .cmc-gym-auto-box input { margin: 0; cursor: pointer; }
+#cmc-gym-bar .cmc-gym-auto-on {
+  color: #f0a07a;
+  border-color: #d95926;
+  background: rgba(217, 89, 38, 0.16);
+}
+
+/* kasino: tvary jako emoji, ať je řádek úzký */
+#cmc-gym-bar .cmc-casino-btn {
+  min-width: 0;
+  padding: 3px 8px;
+  font-size: 13px;
+  line-height: 1.1;
+}
+#cmc-gym-bar .cmc-casino-input {
+  width: 78px;
+  padding: 1px 4px;
+  font: inherit;
+  font-size: 10px;
+  text-align: right;
+  color: #f4e9d8;
+  background: #140c0a;
+  border: 1px solid #4a251d;
+  border-radius: 4px;
+}
+#cmc-gym-bar .cmc-casino-input:focus { border-color: #d4a13a; outline: none; }
+#cmc-gym-bar .cmc-casino-reserve { color: #b39c86; }
+#cmc-gym-bar .cmc-casino-blocked { opacity: 0.45; }
+#cmc-gym-bar .cmc-casino-serie { color: #f0a07a; }
+#cmc-gym-bar .cmc-casino-need { color: #b39c86; }
+#cmc-gym-bar .cmc-casino-capped { color: #ffb3a8; }
+#cmc-gym-bar .cmc-casino-sum {
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+#cmc-gym-bar .cmc-casino-plus { color: #62d3ab; }
+#cmc-gym-bar .cmc-casino-minus { color: #ffb3a8; }
+
+/* zločiny: na tlačítku je jen číslo odvahy, tak ať jsou co nejužší */
+/*
+ * Zločinů je dvacet, takže jsou ve dvou řádcích a tlačítka menší – jinak by
+ * lišta zabrala půl obrazovky. Řádky nemají mezi sebou čáru, aby bylo poznat,
+ * že patří k sobě.
+ */
+#cmc-gym-bar .cmc-gym-crime {
+  padding: 2px 5px;
+  font-size: 10px;
+}
+#cmc-gym-bar .cmc-gym-crime-row { gap: 4px; }
+#cmc-gym-bar .cmc-gym-crime-row + .cmc-gym-crime-row {
+  padding-top: 3px;
+  border-top: 0;
+}
+/* prázdný popisek drží druhý řádek zarovnaný pod prvním */
+#cmc-gym-bar .cmc-gym-label-prazdny { visibility: hidden; }
+#cmc-gym-bar .cmc-gym-label-prazdny::before { content: 'Zločiny:'; }
+
+/* ovládání automatického tréninku – klikne bez uživatele, tak ať je vidět */
+#cmc-gym-bar .cmc-gym-auto {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+  padding: 2px 4px 2px 6px;
+  border: 1px solid #4a251d;
+  border-radius: 6px;
+}
+#cmc-gym-bar .cmc-gym-auto:hover { border-color: #d4a13a; }
+/* zapnuté = oranžově, stejně jako „auto“ u letadel a lodí */
+#cmc-gym-bar .cmc-gym-auto-on {
+  border-color: #d95926;
+  background: rgba(217, 89, 38, 0.16);
+}
+#cmc-gym-bar .cmc-gym-auto-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #8f7c68;
+  white-space: nowrap;
+}
+#cmc-gym-bar .cmc-gym-auto-on .cmc-gym-auto-label { color: #f0a07a; }
+#cmc-gym-bar .cmc-gym-auto-select {
+  padding: 1px 2px;
+  font: inherit;
+  font-size: 10px;
+  color: #f4e9d8;
+  background: #140c0a;
+  border: 1px solid #4a251d;
+  border-radius: 4px;
+  cursor: pointer;
+}
+#cmc-gym-bar .cmc-gym-auto-select:focus { border-color: #d4a13a; outline: none; }
+/* pozastaveno hlavním vypínačem – volba zůstává, jen teď neběží */
+#cmc-gym-bar .cmc-gym-auto-paused {
+  border-color: #6b5a4a;
+  background: rgba(107, 90, 74, 0.18);
+}
+#cmc-gym-bar .cmc-gym-auto-paused .cmc-gym-auto-label,
+#cmc-gym-bar .cmc-gym-auto-paused span { color: #8f7c68; }
+
+/*
+ * !!! PRAVÝ KOUT MÁ JEDEN ROZMĚR !!!
+ * Vypínač, obnovování a minimalizace stály vedle sebe každý jinak vysoký
+ * (11px písmo proti 17px, různé paddingy), takže to vypadalo jako tři nesourodé
+ * věci. Sdílená výška i zaoblení z nich dělají jednu skupinu; barvy zůstávají
+ * rozdílné, protože každá znamená něco jiného.
+ */
+#cmc-gym-bar .cmc-gym-ctrl > .cmc-gym-master,
+#cmc-gym-bar .cmc-gym-ctrl > .cmc-gym-reload,
+#cmc-gym-bar .cmc-gym-ctrl > .cmc-gym-toggle {
+  box-sizing: border-box;
+  height: 26px;
+  min-width: 26px;
+  padding: 0 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 13px;
+  line-height: 1;
+  border-radius: 6px;
+}
+
+/* hlavní vypínač automatiky */
+#cmc-gym-bar .cmc-gym-master {
+  padding: 1px 5px;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.3;
+  color: #f0a07a;
+  background: rgba(217, 89, 38, 0.16);
+  border: 1px solid #d95926;
+  border-radius: 6px;
+  cursor: pointer;
+}
+#cmc-gym-bar .cmc-gym-master:hover { color: #fff; border-color: #f0764a; }
+#cmc-gym-bar .cmc-gym-master-off {
+  color: #8f7c68;
+  background: transparent;
+  border-color: #4a251d;
+}
+#cmc-gym-bar .cmc-gym-master-off:hover { color: #62d3ab; border-color: #199e70; }
+
+/*
+ * Noční obnovování stránky. Sedí v ovládání vedle vypínače, protože je to
+ * vlastnost KARTY, ne herní akce – a hlavně je tam vidět vždycky (sloupec
+ * fronty se schovává, když neběží žádná automatika). Modrá schválně: není to
+ * ani automatika (oranžová), ani zámek karty (zelená).
+ */
+#cmc-gym-bar .cmc-gym-reload {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 4px;
+  font-size: 11px;
+  line-height: 1.3;
+  color: #8f7c68;
+  border: 1px solid #4a251d;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+#cmc-gym-bar .cmc-gym-reload:hover { color: #b39c86; border-color: #d4a13a; }
+/* zaškrtávátko v jedné skupině s tlačítky – 11px default je proti 26px koutu drobný */
+#cmc-gym-bar .cmc-gym-ctrl .cmc-gym-reload input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: #3f7f9c;
+}
+#cmc-gym-bar .cmc-gym-reload input { margin: 0; cursor: pointer; }
+#cmc-gym-bar .cmc-gym-ctrl .cmc-gym-reload .cmc-gym-auto-label { font-size: 15px; }
+#cmc-gym-bar .cmc-gym-reload-on {
+  color: #7fc4e0;
+  border-color: #3f7f9c;
+  background: rgba(63, 127, 156, 0.16);
+}
+/* ve zmenšené liště zůstává jen úchyt */
+#cmc-gym-bar.cmc-gym-hidden .cmc-gym-reload { display: none; }
+#cmc-gym-bar .cmc-gym-auto-stop {
+  padding: 0 3px;
+  font: inherit;
+  font-size: 10px;
+  line-height: 1;
+  color: #f0a07a;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+#cmc-gym-bar .cmc-gym-auto-stop:hover { color: #fff; }
+/* vložené herní tlačítko musí být v DOM (kvůli delegaci), ale ne na očích */
+.cmc-gym-offscreen {
+  /* mimo obraz, ale s rozměry – handler hry si čte offset()/scrollTop() */
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  width: 900px;
+  height: 600px;
+  overflow: hidden;
+}
+
+#cmc-gym-bar.cmc-gym-remote { border-color: #8c2b1c; }
+/* signál „máš plno energie“ – jen zvýraznění, nikdo za tebe neklikne */
+#cmc-gym-bar.cmc-gym-ready {
+  border-color: #199e70;
+  box-shadow: 0 -6px 22px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(25, 158, 112, 0.6);
+}
+#cmc-gym-bar.cmc-gym-ready .cmc-gym-label { color: #62d3ab; }
+#cmc-gym-bar .cmc-gym-status {
+  min-width: 0;
+  font-size: 10px;
+  color: #b39c86;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+#cmc-gym-bar .cmc-gym-status.cmc-gym-err-text { color: #ffb3a8; }
+#cmc-gym-bar .cmc-gym-btn:disabled { opacity: 0.6; cursor: progress; }
+#cmc-gym-bar .cmc-gym-btn.cmc-gym-ok {
+  border-color: #199e70;
+  box-shadow: 0 0 0 1px rgba(25, 158, 112, 0.5) inset;
+}
+#cmc-gym-bar .cmc-gym-btn.cmc-gym-err {
+  background: rgba(230, 103, 103, 0.22);
+  border-color: #e66767;
+  color: #ffb3a8;
+}
+#cmc-gym-bar.cmc-gym-shortcut { padding: 5px 8px 6px; opacity: 0.85; }
+#cmc-gym-bar.cmc-gym-shortcut:hover { opacity: 1; }
+#cmc-gym-bar.cmc-gym-shortcut .cmc-gym-btn { background: #2e1c16; border-color: #4a251d; }
+
+/* Zahrady: tlačítko nese ikonu + počet, takže užší padding než ostatní. */
+#cmc-gym-bar .cmc-gym-farm {
+  padding: 2px 6px;
+  min-width: 40px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Řádek „co právě běží“: tišší než ostatní, je to informace koutkem oka. */
+#cmc-gym-bar .cmc-gym-queue-row { opacity: .9; }
+#cmc-gym-bar .cmc-gym-queue {
+  font-size: 11px;
+  color: #9aa4b2;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Když se něco skutečně děje, ať je to poznat i bez čtení. */
+#cmc-gym-bar .cmc-gym-queue.cmc-gym-queue-on {
+  color: #cfe3ff;
+}
+#cmc-gym-bar .cmc-gym-queue.cmc-gym-queue-on::before {
+  content: '⚙ ';
+  display: inline-block;
+  animation: cmc-gym-spin 2.4s linear infinite;
+}
+@keyframes cmc-gym-spin { to { transform: rotate(360deg); } }
+
+/* Automat: tabulka zatočení – čtyři sloupce, čísla zprava. */
+.cmc-slots-tab { display: flex; flex-direction: column; gap: 1px; }
+.cmc-slots-r {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 6px;
+  padding: 3px 6px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  border-radius: 4px;
+}
+.cmc-slots-r > span:not(.cmc-slots-t) { text-align: right; }
+.cmc-slots-head { color: #9aa4b2; font-size: 10px; text-transform: uppercase; }
+.cmc-slots-r.cmc-slots-win { background: rgba(80, 160, 90, 0.13); }
+.cmc-slots-t { color: #9aa4b2; }
+
+/* Pauza: řádek zešedne a nic se netočí – ať je jasné, že se opravdu nic nedělá. */
+#cmc-gym-bar .cmc-gym-queue.cmc-gym-queue-paused {
+  color: #8a8f98;
+  font-style: italic;
+}
+#cmc-gym-bar .cmc-gym-queue.cmc-gym-queue-paused::before { content: '⏸ '; }
+
+/* Blackjack: pět sloupců, čísla zprava. */
+.cmc-bj-tab { display: flex; flex-direction: column; gap: 1px; }
+.cmc-bj-r {
+  display: grid;
+  grid-template-columns: 1.1fr 1.4fr 1.4fr 1fr 1fr;
+  gap: 6px;
+  padding: 3px 6px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  border-radius: 4px;
+}
+.cmc-bj-r > span:not(.cmc-bj-t) { text-align: right; }
+.cmc-bj-head { color: #9aa4b2; font-size: 10px; text-transform: uppercase; }
+.cmc-bj-r.cmc-bj-win { background: rgba(80, 160, 90, 0.13); }
+.cmc-bj-t { color: #c9d1d9; }
+/* Sázka v diamantech: ať je na první pohled jiná měna než koruny. */
+#cmc-gym-bar .cmc-casino-input.cmc-casino-gems {
+  border-color: #6f7fd0;
+  color: #cfe3ff;
+}
+
+/* Diagnostický průběh blackjacku: monospace, ať jsou časy a sloupce pod sebou. */
+.cmc-bj-trace {
+  max-height: 320px;
+  overflow: auto;
+  margin: 0;
+  padding: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  line-height: 1.45;
+  white-space: pre;
+  color: #c9d1d9;
+  background: rgba(0, 0, 0, 0.28);
+  border-radius: 6px;
+}
+
+/* Rozpis situací: pět sloupců, popis vlevo, čísla zprava. */
+.cmc-sit-tab { display: flex; flex-direction: column; gap: 1px; }
+.cmc-sit-r {
+  display: grid;
+  grid-template-columns: 1.6fr 0.8fr 0.9fr 1.1fr 1.1fr;
+  gap: 6px;
+  padding: 3px 6px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  border-radius: 4px;
+}
+.cmc-sit-r > span:not(.cmc-sit-t) { text-align: right; }
+.cmc-sit-head { color: #9aa4b2; font-size: 10px; text-transform: uppercase; }
+.cmc-sit-t { color: #c9d1d9; }
+.cmc-sit-mezera { height: 10px; }
+
+/* Poker: pět sloupců (kdy, moje, navrch, sázka, rozdíl). */
+.cmc-pk-tab { display: flex; flex-direction: column; gap: 1px; }
+.cmc-pk-r {
+  display: grid;
+  grid-template-columns: 1fr 1.7fr 0.9fr 1fr 1fr;
+  gap: 6px;
+  padding: 3px 6px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  border-radius: 4px;
+}
+.cmc-pk-r > span:not(.cmc-pk-t) { text-align: right; }
+.cmc-pk-head { color: #9aa4b2; font-size: 10px; text-transform: uppercase; }
+.cmc-pk-r.cmc-pk-win { background: rgba(80, 160, 90, 0.13); }
+.cmc-pk-t { color: #c9d1d9; }
+
+/*
+ * Spodní řádek má dva sloupce: vlevo stav akce, vpravo fronta.
+ * Stav dostane zbylé místo (a ořízne se třemi tečkami), fronta si drží svou
+ * šířku vpravo – jinak by delší hláška frontu vytlačila na další řádek.
+ */
+#cmc-gym-bar .cmc-gym-stav-row { flex-wrap: nowrap; }
+#cmc-gym-bar .cmc-gym-stav-row .cmc-gym-status {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+#cmc-gym-bar .cmc-gym-fronta {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 55%;
+  min-width: 0;
+  /* oddělovač, ať je poznat, že jde o dvě různé informace */
+  padding-left: 8px;
+  border-left: 1px solid #4a251d;
+}
+#cmc-gym-bar .cmc-gym-fronta.cmc-gym-fronta-skryta { display: none; }
+#cmc-gym-bar .cmc-gym-fronta .cmc-gym-queue {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Automatika běží jinde: řádek zešedne, ať je jasné, že tady nic nekliká. */
+#cmc-gym-bar .cmc-gym-queue.cmc-gym-queue-jinde {
+  color: #8a8f98;
+  font-style: italic;
+}
+#cmc-gym-bar .cmc-gym-queue.cmc-gym-queue-jinde::before { content: '🔒 '; }
+
+/*
+ * Potvrzení hry („Opravdu? Dostaneš stejné množství špinavých peněz“) při
+ * VLASTNÍM kliku automatiky. Ptát se na akci, kterou si uživatel sám zapnul
+ * zaškrtávátkem, nemá smysl a při každém převodu by mu to probliklo přes
+ * obrazovku. Třídu nasazuje bank.js jen na těch pár set milisekund, co si
+ * dialog odklepává, a v `finally` ji bezpodmínečně sundá.
+ *
+ * `visibility`, ne `display`: podle `display` se pozná otevřený dialog, takže
+ * `display: none` by ho schoval i před vlastní kontrolou. `pointer-events`
+ * jsou tu proto, aby se do neviditelného dialogu nedalo trefit myší –
+ * programový `.click()` to neovlivňuje.
+ */
+html.cmc-tichy-dialog .confirm-box,
+html.cmc-tichy-dialog .confirm-modal {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/*
+ * Fajfka „hraje tady“ – ruční přebití zámku mezi kartami. Vypadá jako ostatní
+ * zaškrtávátka v liště, ale zeleně: není to zapnutá automatika (to je oranžová),
+ * je to „tahle karta je ta pravá“. `flex-shrink: 0`, aby ji dlouhý text fronty
+ * nevytlačil – právě když je fronta upovídaná, chce na ni být vidět.
+ */
+#cmc-gym-bar .cmc-gym-karta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: 0 0 auto;
+  padding: 2px 5px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #8f7c68;
+  border: 1px solid #4a251d;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+#cmc-gym-bar .cmc-gym-karta:hover { border-color: #d4a13a; color: #b39c86; }
+#cmc-gym-bar .cmc-gym-karta input { margin: 0; cursor: pointer; }
+#cmc-gym-bar .cmc-gym-karta-on {
+  color: #7fd08a;
+  border-color: #3f8c4c;
+  background: rgba(63, 140, 76, 0.16);
+}
+/* sirotek po reloadu rozšíření zámek nedostane, ať fajfku přepneš jakkoli */
+#cmc-gym-bar .cmc-gym-karta:has(input:disabled) {
+  opacity: .45;
+  cursor: default;
+  border-color: #4a251d;
+}
+#cmc-gym-bar .cmc-gym-karta input:disabled { cursor: default; }
+
+/* Kámen–Nůžky–Papír má vlastní řádek: tady se platí, ne sbírá. */
+#cmc-gym-bar .cmc-rps-input { width: 76px; }
+/*
+ * Výrobny a banka sdílejí jeden řádek (výrobny první). Tlačítka jsou drobnější,
+ * ať se čtyři ikony i dvě akce banky vedle sebe vešly.
+ */
+#cmc-gym-bar .cmc-gym-vyroba-row .cmc-gym-unit { padding: 3px 8px; }
+/* banka má dvě zaškrtávátka (prát / ukládat) a políčko rezervy */
+#cmc-gym-bar .cmc-gym-bank-autos { display: flex; align-items: center; gap: 4px; }
+#cmc-gym-bar .cmc-bank-keep,
+#cmc-gym-bar .cmc-bank-keep-dirty { width: 86px; }
+#cmc-gym-bar .cmc-gym-vyroba-row .cmc-gym-label { margin-right: 2px; }
+#cmc-gym-bar .cmc-gym-rps-info {
+  font-size: 10px;
+  color: #b39c86;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Šetřicí režim: zastavit nekonečné animace hry.
+ *
+ * Změřeno: hra drží 27 animací a všechny jsou `infinite` (pulseAnim, bounceAnim
+ * a spol., smyčka 1–2 s). Animují jen `transform`/`opacity`, takže nepřepočítávají
+ * layout – ale běží na kompozitoru, který se kvůli nim nesmí uspat, a karta se
+ * proto překresluje každý snímek, i když se ve hře nic nemění.
+ *
+ * Vylučují se prvky rozšíření: naše jediná nekonečná animace je ozubené kolečko
+ * u běžící akce a to má být vidět, protože říká, že se něco děje.
+ */
+body.cmc-uspor *:not([class*='cmc-']):not([id^='cmc-'])::before,
+body.cmc-uspor *:not([class*='cmc-']):not([id^='cmc-'])::after,
+body.cmc-uspor *:not([class*='cmc-']):not([id^='cmc-']) {
+  animation: none !important;
+  transition: none !important;
+}
+
+/*
+ * Karta „Trh“ – evidence předmětů. Jedna položka je PRODUKT (master) a obrázek
+ * se tahá z CDN hry; ve storage je jen cesta, ne data (base64 by při stovkách
+ * produktů zabral megabajty a k ničemu by to nebylo).
+ */
+#cmc-panel .cmc-trh-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-bottom: 1px solid rgba(74, 37, 29, 0.6);
+  cursor: pointer;
+}
+#cmc-panel .cmc-trh-item:hover { background: rgba(212, 161, 58, 0.08); }
+#cmc-panel .cmc-trh-item-open { background: rgba(212, 161, 58, 0.14); }
+#cmc-panel .cmc-trh-ikona {
+  width: 32px; height: 32px; flex: 0 0 auto;
+  object-fit: contain;
+  /* tmavé pozadí hry – bez něj splynou světlé ikony s panelem */
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid #4a251d;
+  border-radius: 6px;
+}
+#cmc-panel .cmc-trh-ikona-chybi {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #8f7c68; font-size: 14px;
+}
+#cmc-panel .cmc-trh-jmeno { flex: 1 1 auto; min-width: 0; }
+#cmc-panel .cmc-trh-nazev {
+  font-size: 12px; color: #e8d9c5;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#cmc-panel .cmc-trh-cesta {
+  font-size: 9px; color: #8f7c68;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#cmc-panel .cmc-trh-cislo {
+  flex: 0 0 auto; min-width: 62px; text-align: right;
+  font-size: 11px; color: #b39c86;
+}
+#cmc-panel .cmc-trh-detail {
+  padding: 6px 6px 10px;
+  border-bottom: 1px solid #4a251d;
+}
+/* vzácnosti barevně – jsou to třídy z cesty obrázku, takže pevná sada */
+#cmc-panel .cmc-badge-common { color: #b39c86; border-color: #4a251d; }
+#cmc-panel .cmc-badge-uncommon { color: #7fd08a; border-color: #3f8c4c; }
+#cmc-panel .cmc-badge-rare { color: #7fc4e0; border-color: #3f7f9c; }
+#cmc-panel .cmc-badge-epic { color: #c79bea; border-color: #7a4f9c; }
+#cmc-panel .cmc-badge-legendary { color: #f0a07a; border-color: #d95926; }
+#cmc-panel .cmc-badge-mythic { color: #f2d06b; border-color: #d4a13a; }
+
+/* ---- boj (#/search) ------------------------------------------------------- */
+/*
+ * Útok je jediná akce, která něco dělá jinému hráči a nejde vzít zpět, tak je
+ * odlišený sytější červenou než ostatní vínová tlačítka lišty.
+ */
+#cmc-gym-bar .cmc-atk-btn { background: #7a1b12; border-color: #b0301d; }
+#cmc-gym-bar .cmc-atk-btn:hover:not(:disabled) { background: #98241a; border-color: #e0492f; }
+#cmc-gym-bar .cmc-atk-btn:disabled { background: #2a1a15; border-color: #3d211a; color: #8f7c68; }
+/* podstrčený odkaz na scénu útoku nesmí být vidět ani na okamžik */
+a.cmc-atk-offscreen { position: absolute !important; left: -9999px !important; top: 0 !important; }
+
+/* ---- opravdová tabulka s rámečky ------------------------------------------ */
+/*
+ * `.cmc-trh-tab` je mřížka, ne jen řádky s tečkovanou linkou: staty mají vlastní
+ * sloupce, a bez svislých linek se u čtyř čísel v řadě nepozná, které patří
+ * do kterého sloupce.
+ */
+#cmc-panel .cmc-trh-tab {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  margin: 2px 0 6px;
+}
+#cmc-panel .cmc-trh-tab th,
+#cmc-panel .cmc-trh-tab td {
+  border: 1px solid var(--line);
+  padding: 3px 6px;
+  vertical-align: top;
+}
+#cmc-panel .cmc-trh-tab thead th {
+  background: var(--surface-3);
+  color: var(--muted);
+  font-weight: 700;
+  white-space: nowrap;
+}
+#cmc-panel .cmc-trh-tab tbody tr:nth-child(even) { background: rgba(0, 0, 0, 0.18); }
+#cmc-panel .cmc-trh-tab tbody tr:hover { background: rgba(212, 161, 58, 0.10); }
+/* široká tabulka se posouvá ve svém obalu, panel se kvůli ní nerozjede */
+#cmc-panel .cmc-trh-scroll { overflow-x: auto; max-width: 100%; }
+
+/* ---- čísla v tabulkách ---------------------------------------------------- */
+/*
+ * Staty mají vlastní sloupce, takže musí být zarovnané na desítky – jinak se
+ * dvě helmy očima nesrovnají. `tabular-nums` drží stejnou šířku číslic i tam,
+ * kde font sází jedničku úzkou.
+ */
+#cmc-panel .cmc-table .cmc-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/*
+ * Popisek u pole vkladu v kasinu. Pole ovládá tři různá nastavení podle volby
+ * v AUTO (kuličky Kč / blackjack 💎 / poker 💎) a bez popisku se do něj psalo
+ * naslepo – zadané číslo pak vypadalo, že „se vrátilo zpátky“.
+ */
+#cmc-gym-bar .cmc-casino-cil {
+  color: #d4a13a;
+  font-weight: 700;
+  white-space: nowrap;
+}
