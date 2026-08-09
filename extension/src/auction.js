@@ -115,21 +115,13 @@
     return t ? t * 1000 : null;
   }
 
-  /**
-   * Denní limit příhozů. Hra ho píše jako „Můžeš přihazovat v aukcích 4/4 krát
-   * denně“.
-   *
-   * !!! NEVÍM, JESTLI JE PRVNÍ ČÍSLO „ZBÝVÁ“ NEBO „UTRACENO“ !!!
-   * Obojí se dá přečíst stejně a spletená interpretace by hlídku buď zbytečně
-   * vypnula, nebo naopak nechala klikat naprázdno. Proto se limit jen UKAZUJE
-   * a o ničem nerozhoduje – když je vyčerpaný, hra příhoz odmítne a ověření
-   * v `prihod()` to pozná. Až se to změří, dá se z toho udělat podmínka.
+  /*
+   * !!! DENNÍ LIMIT SEM NEPATŘÍ !!!
+   * Na stránce je „Můžeš přihazovat v aukcích 4/4 krát denně“ a chvíli se to
+   * ukazovalo i u předmětů. Je to ale limit DIAMANTOVÉ aukce (`pointsAuction`),
+   * kterou tenhle modul vůbec neřeší – u dražeb předmětů žádný denní strop není.
+   * Ukazovat ho tady by znamenalo hlásit omezení, které neexistuje.
    */
-  function limitDne() {
-    const t = (document.body ? document.body.textContent : '').replace(/\s+/g, ' ');
-    const m = t.match(/přihazovat v aukcích\s*(\d+)\s*\/\s*(\d+)\s*krát denně/i);
-    return m ? { prvni: +m[1], celkem: +m[2], text: m[1] + '/' + m[2] } : null;
-  }
 
   const spinave = () => {
     const el = document.querySelector('.value.renew-dirty_money');
@@ -288,10 +280,8 @@
       return { co: 'penize', cil,
         text: 'chybí špinavé (' + NS.fmt.kc(cil, { short: true }) + ')' };
     }
-    const l = limitDne();
     return { co: 'prihodit', cil, cas,
-      text: 'přihodí ' + NS.fmt.kc(cil, { short: true }) + ' (+' + PRIHOZ_PCT + ' %)'
-        + (l ? ' · denní limit ' + l.text : '') };
+      text: 'přihodí ' + NS.fmt.kc(cil, { short: true }) + ' (+' + PRIHOZ_PCT + ' %)' };
   }
 
   /** Napíše k položce, co se děje – bez toho by hlídka byla neviditelná. */
@@ -413,6 +403,6 @@
   }
 
   NS.auction = { start, scan, currentBid, lotId, jeDiamantova, zbyva, veduJa,
-    rozhodni, prihod, kolo, limitDne, prihozZ,
+    rozhodni, prihod, kolo, prihozZ,
     KONTROLA_MS, OKNO_MS, PRIHOZ_PCT, DRUHY };
 })();

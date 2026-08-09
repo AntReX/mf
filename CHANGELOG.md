@@ -18,8 +18,13 @@ zpětně by znamenalo si je domyslet.
 - **Klíč dražby nese i druh** (`auction:32038`). `pointsAuction/bid/12486`
   a `auction/bid/12486` jsou dvě různé dražby se stejným číslem – pod jedním
   klíčem by si zdědily „moji nabídku“.
-- Denní limit příhozů („Můžeš přihazovat v aukcích 4/4 krát denně“) se ukazuje,
-  ale nerozhoduje: není poznat, jestli první číslo je „zbývá“ nebo „utraceno“.
+
+## 1.23.1
+
+- **Denní limit u předmětů zmizel.** „Můžeš přihazovat v aukcích 4/4 krát denně“
+  je limit DIAMANTOVÉ aukce (`pointsAuction`), ne dražeb předmětů – u těch žádný
+  denní strop není. Ukazovat ho u předmětů znamenalo hlásit omezení, které
+  neexistuje, tak se limit nečte vůbec.
 
 ## 1.22.1
 

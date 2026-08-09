@@ -161,41 +161,22 @@ function uklid() {
     eq('přesně na strop ještě jde', A.rozhodni(it, 'auction:666').co, 'prihodit');
   }
 
-  console.log('\n[limit] denní limit se UKAZUJE, ale nerozhoduje');
+  console.log('\n[limit] !!! DENNÍ LIMIT K PŘEDMĚTŮM NEPATŘÍ !!!');
   {
     /*
-     * Hra píše „Můžeš přihazovat v aukcích 4/4 krát denně“ a není poznat, jestli
-     * první číslo je „zbývá“, nebo „utraceno“. Spletená interpretace by hlídku
-     * buď zbytečně vypnula, nebo ji nechala klikat naprázdno – proto se z toho
-     * podmínka nedělá a spoléhá se na ověření příhozu.
+     * „Můžeš přihazovat v aukcích 4/4 krát denně“ je limit DIAMANTOVÉ aukce
+     * (`pointsAuction`), ne dražeb předmětů. Chvíli se ukazoval i u předmětů,
+     * což hlásilo omezení, které tam neexistuje.
      */
     uklid(); spinave(1e12);
     await nastav({ 'auction:666': { strop: 100000 } });
     D.body.insertAdjacentHTML('beforeend',
       '<p>Můžeš přihazovat v aukcích 4/4 krát denně</p>');
     const it = polozka('666', '1000', 60);
-    const l = A.limitDne();
-    eq('limit se přečte', l.text, '4/4');
     const r = A.rozhodni(it, 'auction:666');
-    eq('a stejně se přihodí', r.co, 'prihodit');
-    ok('limit je vidět v hlášce', /denní limit 4\/4/.test(r.text));
-  }
-
-  console.log('\n[rozhodnutí] když vedu, nepřihazuju sám sobě');
-  {
-    uklid(); spinave(1e12);
-    await nastav({ 'auction:666': { strop: 100000, moje: 1000 } });
-    const it = polozka('666', '1000', 60);
-    const r = A.rozhodni(it, 'auction:666');
-    eq('vedu', r.co, 'vedu');
-  }
-
-  console.log('\n[rozhodnutí] chybějící špinavé peníze se nehádají');
-  {
-    uklid(); spinave(500);
-    await nastav({ 'auction:666': { strop: 100000 } });
-    const it = polozka('666', '1000', 60);
-    eq('nepřihazuje', A.rozhodni(it, 'auction:666').co, 'penize');
+    eq('přihodí se', r.co, 'prihodit');
+    ok('a o limitu ani slovo (' + r.text + ')', !/limit/i.test(r.text));
+    ok('modul limit vůbec nečte', typeof A.limitDne === 'undefined');
   }
 
   console.log('\n[příhoz] uloží se jako moje, až když cena opravdu stoupne');
