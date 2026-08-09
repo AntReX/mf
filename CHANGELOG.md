@@ -6,6 +6,15 @@ Verze se drží v `extension/manifest.json`; nejvyšší číslo tady mu musí o
 Záznamy začínají u 1.13.0 – od starších verzí se nevedly, takže dopisovat je
 zpětně by znamenalo si je domyslet.
 
+## 1.22.1
+
+- **Hvězdička rozhodila inventář.** Dostala `position: relative` na
+  `.col-card-inner`, aby se měla čeho držet – ale `.col` je ve hře UŽ `relative`
+  a všechny absolutně pozicované prvky karty (rohy, odznak vzácnosti, ikony
+  akcí) se pozicují proti němu. Bližší `relative` jim změnil vztažný rámec
+  a karta se rozsypala. Hvězdička teď visí přímo na `.col` a rozšíření
+  nepřidává pozicování žádnému hernímu prvku.
+
 ## 1.22.0
 
 - **Aukce: pole „přihazovat do“** u každé dražby. Hlídka kontroluje každých 30 s

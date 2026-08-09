@@ -1309,7 +1309,16 @@ a.cmc-atk-offscreen { position: absolute !important; left: -9999px !important; t
 }
 .cmc-fav:hover { color: #f0c268; border-color: #d4a13a; }
 .cmc-fav-on { color: #f0c268; border-color: #d4a13a; }
-/* karta musí být vztažný rámec, jinak by hvězdička odplula k okraji stránky */
-.col[data-item-id] .col-card-inner { position: relative; }
+/*
+ * !!! DO POZICOVÁNÍ HERNÍCH PRVKŮ SE NESAHÁ !!!
+ * Dřív tu stálo `.col[data-item-id] .col-card-inner { position: relative }`,
+ * aby se hvězdička měla čeho držet. Rozhodilo to celou kartu: `.col` je ve hře
+ * UŽ `position: relative` a všechny její absolutně pozicované prvky (`.corners`
+ * a jejích devět rohů, odznak vzácnosti, ikony akcí) se pozicují proti němu.
+ * Přidáním `relative` na bližšího předka se jim změnil vztažný rámec a odskočily.
+ *
+ * Hvězdička proto visí na `.col`, který hra pozicuje sama – rozšíření nepřidává
+ * pozicování nikam.
+ */
 #cmc-gym-bar .cmc-fav-btn { background: #2e2216; border-color: #5a4520; }
 #cmc-gym-bar .cmc-fav-btn:hover:not(:disabled) { border-color: #d4a13a; }

@@ -105,9 +105,16 @@
       ev.stopPropagation();      // ať klik neotevře akci předmětu
       prepni(id, karta).catch(() => {});
     });
-    /* do samotné karty, ne k akcím – tam by se pletl s „nasadit/prodat“ */
-    const kam = karta.querySelector('.col-card-inner') || karta.firstElementChild || karta;
-    kam.appendChild(b);
+    /*
+     * Přímo do `.col`, ne do `.col-card-inner`: `.col` už hra pozicuje
+     * (`position: relative`), takže se hvězdička má o co opřít a NIKOMU se
+     * nemění vztažný rámec. Vkládat ji dovnitř karty znamenalo rozhodit
+     * všechny herní absolutně pozicované prvky – viz panel.css.
+     *
+     * A ne k `.acts`: tam sedí „nasadit / prodat / do aukce“ a přidávat mezi ně
+     * další tlačítko je koledování o omylem prodaný předmět.
+     */
+    karta.appendChild(b);
     obarvi(id, karta);
   }
 

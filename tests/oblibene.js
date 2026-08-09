@@ -209,6 +209,37 @@ function uklid() {
     eq('bez oblíbených se řádek nestaví', O.buttons(() => {}).length, 0);
   }
 
+  console.log('\n[layout] !!! DO POZICOVÁNÍ HERNÍCH PRVKŮ SE NESAHÁ !!!');
+  {
+    /*
+     * Tohle rozhodilo celý inventář: hvězdička dostala `position: relative` na
+     * `.col-card-inner`, aby se měla čeho držet. Ale `.col` je ve hře UŽ
+     * `relative` a všechny absolutně pozicované prvky karty (`.corners` a jejích
+     * devět rohů, odznak vzácnosti, ikony akcí) se pozicují proti němu – bližší
+     * `relative` jim změnil vztažný rámec a odskočily.
+     */
+    const css = fs.readFileSync(path.join(EXT, 'panel.css'), 'utf8');
+    const pravidla = css.replace(/\/\*[\s\S]*?\*\//g, '');
+    ok('rozšíření nepřidává position herním prvkům karty',
+      !/\.col(-card)?[^{]*\{[^}]*position\s*:/.test(pravidla));
+    ok('ani jinému hernímu prvku inventáře',
+      !/\.(col-card-inner|col-card-art|acts|corners)[^{]*\{[^}]*position\s*:/.test(pravidla));
+
+    /* hvězdička patří přímo do `.col`, který hra pozicuje sama */
+    uklid();
+    hra();
+    const k = karta(161599, 'pets/rare/chain_bulldog');
+    O.scan();
+    const b = k.querySelector('.cmc-fav');
+    eq('hvězdička je dítě .col', b.parentElement.className, 'col');
+    ok('ne uvnitř karty', !k.querySelector('.col-card-inner .cmc-fav'));
+    ok('a ne mezi akcemi (prodej!)', !k.querySelector('.acts .cmc-fav'));
+
+    /* herní prvky karty musí zůstat, jak byly */
+    ok('akce předmětu zůstaly tři', k.querySelectorAll('.acts a').length === 3);
+    ok('odznak vzácnosti je pořád na místě', !!k.querySelector('.col-card-badge .rank'));
+  }
+
   console.log('\n[zdroj] Turbo se nesmí objevit jako akce');
   {
     const src = fs.readFileSync(path.join(EXT, 'src/oblibene.js'), 'utf8');
