@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CzechMafie Companion",
-  "version": "1.20.1",
+  "version": "1.21.0",
   "description": "Read-only pomocník ke hře czechmafie.cz: přehled stavu budov, ekonomická kalkulačka, historie majetku a evidence celkových nákladů na předměty. Neprovádí žádné herní akce.",
   "permissions": [
     "storage",

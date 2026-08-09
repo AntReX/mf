@@ -1,16 +1,22 @@
 # CzechMafie Companion
 
+**Verze: 1.21.0** · [historie změn](../CHANGELOG.md)
+
 Chrome rozšíření (Manifest V3) ke hře **czechmafie.cz**. Ukazuje, jak na tom
 jsou tvoje budovy, počítá, jestli se výroba vyplácí, sleduje vývoj majetku
 v čase a vede evidenci toho, **kolik tě každý předmět celkově stál** – od
 pořízení přes všechny upgrady.
 
-> **Rozšíření neprovádí herní akce.** Nesklízí, nekupuje, nespouští výrobu,
-> nepřihazuje v aukci. Jediné, co dělá směrem ke hře, jsou HTTP **GET** na
-> stránky budov – tedy totéž, co se stane, když si budovu otevřeš v prohlížeči.
-> (Verze 0.1.0 obsahovala automatizaci; ta byla kompletně odstraněna.)
+> **Rozšíření DĚLÁ herní akce.** Tenhle odstavec dřív tvrdil opak – že jde jen
+> o čtení – a byla to pravda pro verzi 0.2. Dnes to neplatí: sklízí a spouští
+> výrobny, ukládá a pere v bance, hraje poker, blackjack a automat, vypravuje
+> letadla a lodě, páchá zločiny, vylepšuje budovy a útočí na neaktivní hráče.
+> Všechno je vidět v liště dole, dá se to vypnout jedním tlačítkem (⏸) a nic
+> z toho není zapnuté samo od sebe.
 >
-> **Výjimky**, které sahají do UI hry, ale samy nic neposílají: v **aukci**
+> Kliká se přitom na **skutečná tlačítka hry** (fragment budovy se vloží do
+> herního okna a klikne se na jeho prvek) – přímé POSTy hra na většině adres
+> odmítá. Výjimky, které do UI hry sahají, ale samy nic neposílají: v **aukci**
 > vyplní pole „Tvá sázka?“ (odeslání je na tobě) a **lišta dole** přeposílá klik
 > na herní tlačítko – „Trénovat“ v posilovně a kasárnách, „Sebrat peníze“ /
 > „Odeslat“ u letadel a lodí, „Spáchat zločin“ u zločinů z mapy. Vždy **jeden

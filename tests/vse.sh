@@ -8,7 +8,7 @@
 # Nula kontrol není úspěch; teď se hlásí zvlášť.
 cd "$(dirname "$0")" || exit 1
 
-TESTY=(lista panel-poloha kasino-pole attack upgrade rps fleet bank vyrobny market
+TESTY=(verze lista panel-poloha kasino-pole attack upgrade rps fleet bank vyrobny market
        tabs background reload captcha)
 
 celkem=0

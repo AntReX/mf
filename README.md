@@ -1,5 +1,7 @@
 # CzechMafie Companion
 
+**Verze rozšíření: 1.21.0** · [historie změn](CHANGELOG.md)
+
 Rozšíření Chrome (MV3) pro hru [czechmafie.cz](https://s1.czechmafie.cz) – lišta
 s ovládáním, evidence a automatiky nad tím, co hra sama nabízí.
 
@@ -22,6 +24,16 @@ node poker.js      # jen jeden modul
 
 `vse.sh` schválně kontroluje návratové kódy a chybějící soubory: dřív hlásil
 nespuštěný test jako „✓ (0)", takže se dala nepozorovaně ztratit celá sada.
+
+## Verzování
+
+Číslo verze je na jednom místě – v `extension/manifest.json` – a odsud se opisuje
+do prvního řádku tohohle souboru a do `CHANGELOG.md`. Že si ta tři místa
+odpovídají, hlídá `tests/verze.js`; bez toho by se README rozešlo s manifestem
+a nikdo by si toho nevšiml.
+
+Zvedá se při každé změně, která se dostane do prohlížeče: druhé číslo u nové
+funkce, třetí u opravy.
 
 ## Zásady, které se tu drží
 

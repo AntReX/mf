@@ -1,15 +1,24 @@
 /* =============================================================================
  * CzechMafie Companion – content script (bootstrap)
  *
- * Rozšíření je READ-ONLY. Neposílá do hry žádnou akci: nekliká, nesklízí,
- * nekupuje, nespouští výrobu. Umí jen tři věci:
- *   1. přečíst stav budov přes GET (stejné adresy, jaké otevřeš v prohlížeči),
- *   2. spočítat ekonomiku a historii z toho, co přečetlo,
- *   3. vést tvoji vlastní evidenci předmětů a jejich celkové ceny.
+ * !!! TENHLE POPIS BYL DLOUHO ŠPATNĚ !!!
+ * Stálo tu „rozšíření je READ-ONLY, neposílá do hry žádnou akci“. To platilo pro
+ * verzi 0.2; od té doby se sem přidaly automatiky a hlavička se neopravila –
+ * takže soubor tvrdil pravý opak toho, co kód dělá.
  *
- * Dvě věci zasahují do UI hry, ale ani jedna nic neodesílá:
- *   – v aukci vloží číslo do pole „Tvá sázka?“ (odesíláš ty),
- *   – v posilovně přemístí tréninková tlačítka do lišty dole (klikáš ty).
+ * Co rozšíření DĚLÁ:
+ *   1. čte stav budov přes GET (stejné adresy, jaké otevřeš v prohlížeči),
+ *   2. počítá ekonomiku, historii a evidenci předmětů,
+ *   3. KLIKÁ – výrobny, banka, kasino (automat/blackjack/poker), letadla a lodě,
+ *      šachty, zločiny, vylepšování budov, útoky na neaktivní hráče.
+ *
+ * Kliká se na SKUTEČNÁ tlačítka hry: fragment budovy se vloží do herního okna
+ * a klikne se na jeho prvek. Přímé POSTy hra na většině adres odmítá
+ * („Spausk per mygtuką, o ne per nuorodą!“).
+ *
+ * Nic z toho není zapnuté samo – každá automatika má svoje zaškrtávátko a nad
+ * nimi je hlavní vypínač ⏸. Do kontroly „jsi člověk?“ se nesahá: pozná se,
+ * automatika se zastaví a řízení má člověk (viz captcha.js).
  *
  * Pořadí načtení souborů určuje manifest.json; sdílí se přes globalThis.CMC.
  * ===========================================================================*/
