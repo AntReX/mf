@@ -234,6 +234,7 @@
     $('pkStake').value = cfg.read.pkStake ?? 10;
     $('pkReserve').value = cfg.read.pkReserve ?? 0;
     $('pkPrah').value = cfg.read.pkPrah ?? 0;
+    $('pkStopSigma').value = cfg.read.pkStopSigma ?? 2.2;
     $('pkStopVychyleni').checked = cfg.read.pkStopVychyleni !== false;
     $('pkMereni').checked = cfg.read.pkMereni === true;
     $('pkMereniAnte').value = cfg.read.pkMereniAnte ?? '10,20';
@@ -503,6 +504,9 @@
       pkStake: Math.max(10, Math.round((+$('pkStake').value || 10) / 10) * 10),
       pkReserve: Math.max(0, Math.round(+$('pkReserve').value || 0)),
       pkPrah: Math.max(0, Math.min(50, Math.round(+$('pkPrah').value || 0))),
+      /* prah hlídače v σ; okno zůstává pevných 300 kol */
+      pkStopSigma: Math.min(20, Math.max(0.1,
+        Math.round((+$('pkStopSigma').value || 2.2) * 10) / 10)),
       pkStopVychyleni: $('pkStopVychyleni').checked,
       upgBar: $('upgBar').checked,
       upgAuto: $('upgAuto').checked,

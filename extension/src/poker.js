@@ -1043,7 +1043,16 @@
    * procent ztráty a žádný prah to nepřebije. Naživo takhle proteklo 1 180 💎
    * za 549 kol, protože panel jen varoval a automatika hrála dál.
    */
-  const STOP_SIGMA = 2.2;    // nad tím se nehraje
+  /*
+   * Výchozí prah; skutečná hodnota je v nastavení (`pkStopSigma`), aby se dala
+   * změnit bez zásahu do kódu. Okno zůstává pevné – viz `STOP_OKNO`.
+   */
+  const STOP_SIGMA = 2.2;
+  const stopSigma = () => {
+    const v = +NS.store.get().read.pkStopSigma;
+    /* rozsah je pojistka proti prázdné/rozbité hodnotě, ne omezení volby */
+    return Number.isFinite(v) && v > 0 ? Math.min(20, v) : STOP_SIGMA;
+  };
   const STOP_OKNO = 300;     // krátké okno, ať se to pozná včas
   const STOP_MIN_KOL = 150;
 
@@ -1213,11 +1222,12 @@
      */
     if (NS.store.get().read.pkStopVychyleni !== false) {
       const pc = poctivost(STOP_OKNO, STOP_MIN_KOL);
-      if (pc.dost && pc.sigmaDealer > STOP_SIGMA) {
+      if (pc.dost && pc.sigmaDealer > stopSigma()) {
         await NS.store.patch('read', { casinoAuto: '' });
         NS.gym.setStatus('⛔ poker vypnut: rozdání je vychýlené '
           + (Math.round(pc.sigmaDealer * 10) / 10) + ' σ ve prospěch dealera'
-          + ' (posledních ' + pc.kol + ' kol). Každá 1 σ stojí ~3,6 pb'
+          + ' (posledních ' + pc.kol + ' kol, prah ' + stopSigma()
+          + ' σ). Každá 1 σ stojí ~3,6 pb'
           + ' návratnosti – nemá cenu hrát.', true);
         NS.gym.collect();
         return false;
@@ -1271,6 +1281,7 @@
   NS.poker = {
     playRound, odehrajKolo, pripravKolo, otevri, nasadit, naplanujDalsi, smyckaZapnuta,
     log, stats, reset, nextStake, autoTick, autoSet, autoOn,
+    STOP_SIGMA, STOP_OKNO, STOP_MIN_KOL, stopSigma,
     sance, zdvojit, kalibrace, platnyPrah, vyhodnot, hodnot, porovnej, porovnejHrou, hrube,
     poctivost, poctivostKol, mereni, mereniStats, kodKarty, popisKarty,
     stav, vysledek, ustaleny,

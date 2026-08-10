@@ -6,6 +6,17 @@ Verze se drží v `extension/manifest.json`; nejvyšší číslo tady mu musí o
 Záznamy začínají u 1.13.0 – od starších verzí se nevedly, takže dopisovat je
 zpětně by znamenalo si je domyslet.
 
+## 1.24.0
+
+- **Panel ukazuje odchylku za posledních 300 kol**, ne za celou dobu – podle
+  toho okna se automatika vypíná. Dřív vedl celý log a vznikaly rozpory: panel
+  hlásil +1,6 σ a „rozdání vypadá poctivě“, zatímco lišta ve stejný moment
+  vypínala poker kvůli 2,2 σ. Celý log zůstal o řádek níž jako kontext.
+- **Prah hlídače (σ) je nastavitelný** v předvolbách (výchozí 2,2). Okno zůstává
+  pevných 300 kol, protože vychýlení se v čase mění a starší kola ho rozmazávají.
+- Hláška o vypnutí i řádek v panelu teď prah vypisují, takže je vidět, proti
+  čemu se to poměřuje.
+
 ## 1.23.4
 
 - **★ se přestěhovala do pravého dolního kouta** – vlevo nahoře má hra rank

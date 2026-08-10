@@ -142,6 +142,13 @@
       pkReserve: 0,
       pkPrah: 0,
       pkVzorku: 3000,
+      /*
+       * Prah hlídače poctivosti v σ. Nad ním se automatika pokeru sama vypne.
+       * Okno je pevných 300 kol (`STOP_OKNO`) – krátké schválně, protože
+       * vychýlení se v čase mění a starší kola by ho rozmazala.
+       * Změřený vztah: každá 1 σ stojí ~3,6 pb návratnosti.
+       */
+      pkStopSigma: 2.2,
       pkLoop: true,
       /*
        * Automaticky páchaný zločin – ID z /map/crime/{n}, nebo 0 = vypnuto.

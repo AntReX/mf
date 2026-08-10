@@ -103,28 +103,60 @@
    * hra rozdává dealerovi vysoké karty o 7 σ častěji, než má.
    */
   function poctivostRozdani() {
-    const p = NS.poker.poctivost();
-    if (!p.dost) {
+    const cely = NS.poker.poctivost();
+    if (!cely.dost) {
       return section('Poctivost rozdání',
-        note('Zatím ' + F.num(p.kol) + ' kol s kompletními kartami – na test je'
+        note('Zatím ' + F.num(cely.kol) + ' kol s kompletními kartami – na test je'
           + ' potřeba aspoň 100. Pak se tady spočítá, jestli dealer dostává'
           + ' náhodné karty, nebo jestli mu hra nadržuje.'));
     }
-    const s = p.sigmaDealer;
+
+    /*
+     * !!! HLAVNÍ ČÍSLO JE ČERSTVÉ OKNO, NE CELÝ LOG !!!
+     * Rozhoduje okno hlídače (`STOP_OKNO` = 300 kol) – podle něj se automatika
+     * vypíná a vychýlení se v čase mění, takže starší kola ho jen rozmazávají.
+     * Dřív tu vedl celý log a vznikaly z toho rozpory: panel ukazoval +1,6 σ
+     * a „vypadá poctivě“, zatímco lišta zrovna hlásila vypnutí kvůli 2,2 σ.
+     * Celý log tu zůstává jako kontext, o řádek níž.
+     */
+    const okno = NS.poker.poctivost(NS.poker.STOP_OKNO, NS.poker.STOP_MIN_KOL);
+    const prah = NS.poker.stopSigma();
+    const hlidacZapnut = NS.store.get().read.pkStopVychyleni !== false;
+
+    /* dokud čerstvé okno nemá dost kol, rozhoduje aspoň celý log */
+    const hlavni = okno.dost ? okno : cely;
+    const s = hlavni.sigmaDealer;
+    const nadPrahem = s > prah;
     const spatne = s > 3;
-    const podezrele = s > 2;
+    const podezrele = s > 2 || nadPrahem;
     const sek = section('Poctivost rozdání' + (spatne ? ' – NEHRÁT' : ''));
 
-    sek.appendChild(row('Kol v testu', F.num(p.kol)));
+    sek.appendChild(row(okno.dost
+      ? 'Kol v testu (okno hlídače)' : 'Kol v testu', F.num(hlavni.kol)));
     sek.appendChild(row('Vysokých karet (J,Q,K,A) dealerovi',
-      F.num(p.dealer) + ' · čekáno ' + F.num(Math.round(p.cekano)),
+      F.num(hlavni.dealer) + ' · čekáno ' + F.num(Math.round(hlavni.cekano)),
       spatne ? 'cmc-bad' : (podezrele ? '' : 'cmc-good')));
     sek.appendChild(row('Tobě',
-      F.num(p.hrac) + ' · čekáno ' + F.num(Math.round(p.cekano)),
-      p.sigmaHrac < -3 ? 'cmc-bad' : ''));
-    sek.appendChild(row('Odchylka dealera',
-      (s > 0 ? '+' : '') + (Math.round(s * 10) / 10) + ' σ',
-      spatne ? 'cmc-bad' : (podezrele ? '' : 'cmc-good')));
+      F.num(hlavni.hrac) + ' · čekáno ' + F.num(Math.round(hlavni.cekano)),
+      hlavni.sigmaHrac < -3 ? 'cmc-bad' : ''));
+    sek.appendChild(row('Odchylka dealera'
+      + (okno.dost ? ' – posledních ' + F.num(okno.kol) + ' kol' : ''),
+    (s > 0 ? '+' : '') + (Math.round(s * 10) / 10) + ' σ'
+      + ' · hlídač ' + prah + ' σ' + (hlidacZapnut ? '' : ' (vypnutý)'),
+    nadPrahem ? 'cmc-bad' : 'cmc-good'));
+
+    /* celý log jen jako kontext – rozhodovat podle něj by mazalo čerstvý stav */
+    if (okno.dost && cely.kol > okno.kol) {
+      sek.appendChild(row('Pro srovnání – celý log (' + F.num(cely.kol) + ' kol)',
+        (cely.sigmaDealer > 0 ? '+' : '')
+          + (Math.round(cely.sigmaDealer * 10) / 10) + ' σ'));
+    }
+
+    if (nadPrahem && hlidacZapnut) {
+      sek.appendChild(note('Automatika je nad prahem vypnutá. Prah se dá změnit'
+        + ' v předvolbách rozšíření; okno je pevných '
+        + F.num(NS.poker.STOP_OKNO) + ' kol, protože vychýlení se v čase mění.'));
+    }
 
     if (spatne) {
       sek.appendChild(note('!!! ROZDÁNÍ NENÍ NÁHODNÉ !!! Dealer dostává vysoké'
@@ -132,10 +164,8 @@
         + ' přibližně jedno kolo z tisíce, takže to není smůla. Základní hra je'
         + ' tím ztrátová sama o sobě a ŽÁDNÉ rozhodování to nepřebije, protože'
         + ' zdvojení může přidat nejvýš pár procent.'));
-      sek.appendChild(note('Automatika se za těchto podmínek vypne sama'
-        + ' (posuzuje se z posledních 300 kol). Dá se to zakázat v předvolbách,'
-        + ' ale změřený vztah je nemilosrdný: každá 1 σ vychýlení stojí ~3,6 pb'
-        + ' návratnosti, takže při +5 σ hra bere pětinu každé sázky.'));
+      sek.appendChild(note('Změřený vztah je nemilosrdný: každá 1 σ vychýlení'
+        + ' stojí ~3,6 pb návratnosti, takže při +5 σ hra bere pětinu každé sázky.'));
     } else if (podezrele) {
       sek.appendChild(note('Dealer má vysokých karet víc, než by měl, ale ještě'
         + ' to může být náhoda. Nech dojet dalších pár stovek kol a koukni znovu.'));
