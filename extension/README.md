@@ -1,6 +1,6 @@
 # CzechMafie Companion
 
-**Verze: 1.23.2** · [historie změn](../CHANGELOG.md)
+**Verze: 1.23.3** · [historie změn](../CHANGELOG.md)
 
 Chrome rozšíření (Manifest V3) ke hře **czechmafie.cz**. Ukazuje, jak na tom
 jsou tvoje budovy, počítá, jestli se výroba vyplácí, sleduje vývoj majetku

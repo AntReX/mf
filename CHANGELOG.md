@@ -6,6 +6,14 @@ Verze se drží v `extension/manifest.json`; nejvyšší číslo tady mu musí o
 Záznamy začínají u 1.13.0 – od starších verzí se nevedly, takže dopisovat je
 zpětně by znamenalo si je domyslet.
 
+## 1.23.3
+
+- **Deset pokusů místo tří a od pátého delší pauza.** Prvních čtyři pokusy po
+  0,7 s (většina výpadků je okamžik), od pátého se interval prodlužuje
+  (1,4 · 2,1 · 2,8 · 3,5 · 4,2 s, strop 8 s) – deset pokusů tak trvá ~17 s, ne
+  minuty. Prodloužení platí jen v rámci jednoho čtení: po úspěchu se začíná
+  zas od 0,7 s, nikde se nepamatuje.
+
 ## 1.23.2
 
 - **Poker se přestane sám vypínat po výpadku čtení.** Dvě čtení kasina po sobě

@@ -210,18 +210,35 @@
     }
   }
 
+  /*
+   * Kolik čekat před dalším pokusem. Prvních pár pokusů má krátkou pauzu –
+   * většina výpadků je okamžik a nemá cenu čekat. Od `KLIDNI_OD` se interval
+   * PRODLUŽUJE: když hra neodpovídá pátý pokus v řadě, není to mrknutí, ale
+   * potíž na její straně, a bušit do ní každých 700 ms jí nepomůže.
+   *
+   * S výchozími hodnotami (10 pokusů, základ 700 ms) je to:
+   *   1.–4. pokus   0,7 s
+   *   5.–9. pokus   1,4 · 2,1 · 2,8 · 3,5 · 4,2 s
+   *   celkem asi 17 s, než se to vzdá
+   */
+  const KLIDNI_OD = 5;
+  const PAUZA_MAX = 8000;
+  const pauzaProPokus = (pokus, zaklad = 700) => (pokus < KLIDNI_OD
+    ? zaklad
+    : Math.min(PAUZA_MAX, zaklad * (pokus - KLIDNI_OD + 2)));
+
   /**
-   * GET s krátkou sérií pokusů. Je to ZÁMĚRNĚ zvláštní funkce, ne chování
+   * GET s několika pokusy. Je to ZÁMĚRNĚ zvláštní funkce, ne chování
    * `apiGet()`: některá 404 jsou očekávaná (hra odmítá „přes odkaz“ a vrací
-   * „Spausk per mygtuką, o ne per nuorodą!“) a opakovat je by znamenalo trojnásobný
-   * provoz pro nic.
+   * „Spausk per mygtuką, o ne per nuorodą!“) a opakovat je by znamenalo
+   * desetinásobný provoz pro nic.
    *
    * Používá se tam, kde jednorázový výpadek VYPÍNÁ automatiku – kasino a automaty
    * si selhání počítají do `AUTO_MAX_FAILS`, takže dva 404 za sebou (naměřeno
    * 10. 8. 2026 v 10:57:58 a 10:58:01) stačily na to, aby se hra sama vypnula
    * a uživatel ji našel vypnutou bez zjevné příčiny.
    */
-  async function apiGetTry(path, pokusu = 3, pauza = 700) {
+  async function apiGetTry(path, pokusu = 10, zaklad = 700) {
     let out = { status: 0, raw: null };
     for (let i = 1; i <= pokusu; i++) {
       try {
@@ -234,8 +251,8 @@
       } catch (e) {
         out = { status: 0, raw: null, chyba: e.message };
       }
-      if (out.status === 200) return out;
-      if (i < pokusu) await new Promise(r => setTimeout(r, pauza));
+      if (out.status === 200) return i > 1 ? { ...out, pokusu: i } : out;
+      if (i < pokusu) await new Promise(r => setTimeout(r, pauzaProPokus(i, zaklad)));
     }
     return { ...out, pokusu };
   }
@@ -523,7 +540,7 @@
     return m ? toNum(m[1]) : null;
   }
 
-  NS.parse = { apiGetTry,
+  NS.parse = { apiGetTry, pauzaProPokus, KLIDNI_OD,
     toNum, numAfter, numBefore, byRe, flatten, NUM_WORD,
     apiGet, loadBuilding, readBuilding, readFromText, readSale,
     productionSeconds, percentOf, offersHarvest,
