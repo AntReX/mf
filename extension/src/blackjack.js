@@ -697,8 +697,9 @@
     const host = NS.gym.gameHost();
     if (!host) throw new Error('herní okno nenalezeno – otevři mapu hry');
 
-    const { status, raw } = await NS.parse.apiGet(BUILDING);
-    if (status !== 200) throw new Error('kasino nelze přečíst (HTTP ' + status + ')');
+    const { status, raw } = await NS.parse.apiGetTry(BUILDING);
+    /* výpadek se zkusí znovu – jedno 404 nesmí vypnout automatiku, viz apiGetTry */
+    if (status !== 200) throw new Error('kasino nelze přečíst (HTTP ' + status + ', opakováno)');
     if (NS.jail) NS.jail.zkontrolujText(raw);
 
     const box = document.createElement('div');

@@ -210,6 +210,36 @@
     }
   }
 
+  /**
+   * GET s krátkou sérií pokusů. Je to ZÁMĚRNĚ zvláštní funkce, ne chování
+   * `apiGet()`: některá 404 jsou očekávaná (hra odmítá „přes odkaz“ a vrací
+   * „Spausk per mygtuką, o ne per nuorodą!“) a opakovat je by znamenalo trojnásobný
+   * provoz pro nic.
+   *
+   * Používá se tam, kde jednorázový výpadek VYPÍNÁ automatiku – kasino a automaty
+   * si selhání počítají do `AUTO_MAX_FAILS`, takže dva 404 za sebou (naměřeno
+   * 10. 8. 2026 v 10:57:58 a 10:58:01) stačily na to, aby se hra sama vypnula
+   * a uživatel ji našel vypnutou bez zjevné příčiny.
+   */
+  async function apiGetTry(path, pokusu = 3, pauza = 700) {
+    let out = { status: 0, raw: null };
+    for (let i = 1; i <= pokusu; i++) {
+      try {
+        /*
+         * Schválně přes `NS.parse.apiGet`, ne přes lokální `apiGet`: testy si
+         * čtení podstrkují právě přes `NS.parse.apiGet` a s lokálním voláním by
+         * je to obešlo a střílelo dotazy na živou hru.
+         */
+        out = await NS.parse.apiGet(path);
+      } catch (e) {
+        out = { status: 0, raw: null, chyba: e.message };
+      }
+      if (out.status === 200) return out;
+      if (i < pokusu) await new Promise(r => setTimeout(r, pauza));
+    }
+    return { ...out, pokusu };
+  }
+
   async function loadBuilding(id) {
     const { status, raw } = await apiGet('/map/building/show/' + id);
     if (status !== 200) throw new Error('HTTP ' + status + ' pro budovu ' + id);
@@ -493,7 +523,7 @@
     return m ? toNum(m[1]) : null;
   }
 
-  NS.parse = {
+  NS.parse = { apiGetTry,
     toNum, numAfter, numBefore, byRe, flatten, NUM_WORD,
     apiGet, loadBuilding, readBuilding, readFromText, readSale,
     productionSeconds, percentOf, offersHarvest,

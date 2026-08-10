@@ -6,6 +6,15 @@ Verze se drží v `extension/manifest.json`; nejvyšší číslo tady mu musí o
 Záznamy začínají u 1.13.0 – od starších verzí se nevedly, takže dopisovat je
 zpětně by znamenalo si je domyslet.
 
+## 1.23.2
+
+- **Poker se přestane sám vypínat po výpadku čtení.** Dvě čtení kasina po sobě
+  vrátila HTTP 404 (10:57:58 a 10:58:01), přitom budova jinak odpovídala – a
+  protože se každé selhání počítá do `AUTO_MAX_FAILS`, krátká série výpadků
+  vypnula celou hru. Nový `NS.parse.apiGetTry()` čtení třikrát zkusí; použit
+  v pokeru, blackjacku, automatu i kuličkách. `apiGet()` zůstává bez opakování,
+  protože některá 404 jsou očekávaná („Spausk per mygtuką, o ne per nuorodą!“).
+
 ## 1.23.1
 
 - **Denní limit u předmětů zmizel.** „Můžeš přihazovat v aukcích 4/4 krát denně“

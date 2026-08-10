@@ -195,8 +195,9 @@
     if (!host) throw new Error('herní okno nenalezeno – otevři mapu hry');
     if (!(amount > 0)) throw new Error('sázka musí být větší než nula');
 
-    const { status, raw } = await NS.parse.apiGet(BUILDING);
-    if (status !== 200) throw new Error('kasino nelze přečíst (HTTP ' + status + ')');
+    const { status, raw } = await NS.parse.apiGetTry(BUILDING);
+    /* výpadek se zkusí znovu – jedno 404 nesmí vypnout automatiku, viz apiGetTry */
+    if (status !== 200) throw new Error('kasino nelze přečíst (HTTP ' + status + ', opakováno)');
 
     const box = document.createElement('div');
     box.className = 'cmc-gym-offscreen cmc-casino-box';

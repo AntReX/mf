@@ -1,6 +1,6 @@
 # CzechMafie Companion
 
-**Verze rozšíření: 1.23.1** · [historie změn](CHANGELOG.md)
+**Verze rozšíření: 1.23.2** · [historie změn](CHANGELOG.md)
 
 Rozšíření Chrome (MV3) pro hru [czechmafie.cz](https://s1.czechmafie.cz) – lišta
 s ovládáním, evidence a automatiky nad tím, co hra sama nabízí.

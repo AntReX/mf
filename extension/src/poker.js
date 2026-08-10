@@ -728,8 +728,23 @@
     const host = NS.gym.gameHost();
     if (!host) throw new Error('herní okno nenalezeno – otevři mapu hry');
 
-    const { status, raw } = await NS.parse.apiGet(BUILDING);
-    if (status !== 200) throw new Error('kasino nelze přečíst (HTTP ' + status + ')');
+    /*
+     * !!! JEDNORÁZOVÝ VÝPADEK NESMÍ VYPNOUT AUTOMATIKU !!!
+     * Naměřeno 10. 8. 2026: dvě čtení kasina po sobě vrátila HTTP 404 (10:57:58
+     * a 10:58:01), přitom budova jinak odpovídá normálně. Každé takové selhání
+     * se počítalo do `AUTO_MAX_FAILS`, takže pár výpadků za sebou vypnulo celou
+     * hru – a uživatel našel poker vypnutý bez zjevné příčiny.
+     *
+     * Stejná past už byla u banky ve vylepšování budov (12s timeout), tak se to
+     * řeší stejně: krátká série pokusů, a teprve když neuspěje ani jeden, je to
+     * skutečná chyba.
+     */
+    const o = await NS.parse.apiGetTry(BUILDING);
+    const { status, raw } = o;
+    if (status !== 200) {
+      throw new Error('kasino nelze přečíst (HTTP ' + status
+        + ', ' + (o.pokusu || 1) + ' pokusy)');
+    }
     if (NS.jail) NS.jail.zkontrolujText(raw);
 
     const box = document.createElement('div');
