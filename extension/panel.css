@@ -1291,10 +1291,24 @@ a.cmc-atk-offscreen { position: absolute !important; left: -9999px !important; t
  * Hvězdička sedí v rohu karty, ne u akcí „nasadit/prodat/do aukce“ – tam by se
  * s nimi pletla a omylem se klikne na prodej.
  */
+/*
+ * Pravý DOLNÍ kout – vlevo nahoře má hra rank a vzácnost.
+ *
+ * !!! ALE NE ÚPLNĚ DOLE !!!
+ * Změřená karta (206 × 290 px):
+ *   vlevo nahoře    `.col-card-badge` – rank + vzácnost
+ *   vpravo nahoře   `.acts` – nasadit / vylepšit / PRODAT / do aukce,
+ *                   svislý pruh, končí 134 px nad spodkem
+ *   úplně dole      `.col-card-stats` – atk · def · spd; „spd“ končí 10 px
+ *                   od pravého okraje a 8 px nad spodkem
+ * Doslovný `bottom: 4px` by tedy hvězdičku položil NA číslo rychlosti. Sedí
+ * proto 32 px nad spodkem: pod pruhem akcí (aby se nepletla s prodejem)
+ * a nad staty (aby je nezakrývala).
+ */
 .cmc-fav {
   position: absolute;
-  top: 2px;
-  left: 2px;
+  right: 4px;
+  bottom: 32px;
   z-index: 5;
   width: 22px;
   height: 22px;

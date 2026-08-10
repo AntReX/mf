@@ -6,6 +6,14 @@ Verze se drží v `extension/manifest.json`; nejvyšší číslo tady mu musí o
 Záznamy začínají u 1.13.0 – od starších verzí se nevedly, takže dopisovat je
 zpětně by znamenalo si je domyslet.
 
+## 1.23.4
+
+- **★ se přestěhovala do pravého dolního kouta** – vlevo nahoře má hra rank
+  a vzácnost. Ne úplně dolů: změřená karta (206 × 290) má dole pruh statů, kde
+  „spd“ končí 10 px od pravého okraje, takže doslovný `bottom: 4px` by hvězdičku
+  položil na číslo rychlosti. Sedí 32 px nad spodkem – pod pruhem akcí
+  (nasadit / vylepšit / prodat / do aukce) a nad staty.
+
 ## 1.23.3
 
 - **Deset pokusů místo tří a od pátého delší pauza.** Prvních čtyři pokusy po

@@ -238,6 +238,18 @@ function uklid() {
     /* herní prvky karty musí zůstat, jak byly */
     ok('akce předmětu zůstaly tři', k.querySelectorAll('.acts a').length === 3);
     ok('odznak vzácnosti je pořád na místě', !!k.querySelector('.col-card-badge .rank'));
+
+    /*
+     * Umístění: vlevo nahoře má hra rank, vpravo nahoře pruh akcí (včetně
+     * PRODEJE) a úplně dole staty. Hvězdička patří do pravého dolního kouta,
+     * ale NAD staty – doslovný `bottom: 4px` by ležel na čísle rychlosti.
+     */
+    const pravidlo = (css.match(/\.cmc-fav \{[^}]*\}/) || [''])[0];
+    ok('je vpravo', /right:\s*\d+px/.test(pravidlo) && !/left:\s*\d+px/.test(pravidlo));
+    ok('a dole', /bottom:\s*\d+px/.test(pravidlo) && !/top:\s*\d+px/.test(pravidlo));
+    const odspodu = +(pravidlo.match(/bottom:\s*(\d+)px/) || [0, 0])[1];
+    ok('ale nad pruhem statů (' + odspodu + ' px > 27)', odspodu > 27);
+    ok('a ne tak vysoko, aby lezla do akcí (' + odspodu + ' px < 130)', odspodu < 130);
   }
 
   console.log('\n[zdroj] Turbo se nesmí objevit jako akce');
