@@ -64,7 +64,26 @@
    * Strop délky. Tik chodí každých 5 s, takže kdyby se něco dlouho drhlo, fronta
    * by narůstala – a klikat věci naplánované před minutami nemá smysl.
    */
-  const STROP = 12;
+  /*
+   * !!! STROP MUSÍ POJMOUT VŠECHNY AUTOMATIKY, JINAK POSLEDNÍ NEBĚŽÍ !!!
+   * Bylo tu 12, jenže `AUTOMATY` v gym.js má 14 položek a tik je nabízí vždy
+   * ve stejném pořadí. Když průchod trvá déle než tik (což při síťových
+   * dotazech nastane běžně), fronta se drží plná a všechno od 13. položky dál
+   * se zahazuje – tedy přesně „boj“ a „vylepšení“.
+   *
+   * Změřeno simulací nad tímhle kódem, 60 s provozu se 14 zapnutými
+   * automatikami a akcí ~400 ms:
+   *   trénink (1.)    12 z 12 spuštění
+   *   boj (13.)        4 z 12
+   *   vylepšení (14.)  0 z 12
+   * Přesně to odpovídalo hlášení „ručně to funguje, automaticky podle nálady“.
+   *
+   * Zahazovat se nesmí nic: `run()` deduplikuje podle jména, takže ve frontě
+   * nikdy nebude víc položek, než kolik je automatik. Strop je tu jen jako
+   * pojistka proti runaway smyčce, ne jako regulace provozu – proto se drží
+   * s velkou rezervou nad počtem automatik.
+   */
+  const STROP = 30;
 
   /* ---- zámek na jednu kartu ------------------------------------------------ */
 
