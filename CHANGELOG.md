@@ -6,6 +6,14 @@ Verze se drží v `extension/manifest.json`; nejvyšší číslo tady mu musí o
 Záznamy začínají u 1.13.0 – od starších verzí se nevedly, takže dopisovat je
 zpětně by znamenalo si je domyslet.
 
+## 1.25.1
+
+- **Odmlka po prázdném seznamu je 2 minuty místo 10 a dá se nastavit**
+  (Nastavení → Boj). Deset minut bylo natvrdo v kódu, jenže jak rychle se seznam
+  obmění, závisí na serveru i na tom, jak úzko máš nastavený strop úrovně – jedno
+  číslo pro všechny nesedělo. Dolní mez je minuta: bez ní by z odmlky šlo udělat
+  tlučení bez pauzy a hustý sled hledání je přesně to, na co hra reaguje captchou.
+
 ## 1.25.0
 
 - **Automatiky od třinácté dál se zahazovaly.** `AUTOMATY` má 14 položek, ale

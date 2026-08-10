@@ -432,10 +432,16 @@
   const pauzaMs = () => Math.max(1, +cfg().atkPauza || 60) * 1000;
 
   /*
-   * „Nikdo do úrovně X“ není porucha – jen zrovna není koho. Zkoušet to každou
-   * minutu znovu by jen zbytečně tlouklo do hledání, tak se na chvíli odmlčí.
+   * „Nikdo do úrovně X“ není porucha – jen zrovna není koho. Zkoušet to hned
+   * znovu by jen zbytečně tlouklo do hledání, tak se na chvíli odmlčí.
+   *
+   * !!! NASTAVITELNÉ, DŘÍV NATVRDO 10 MINUT !!!
+   * Jak rychle se seznam obmění, závisí na serveru i na tom, jak úzko máš
+   * nastavený strop úrovně – jedno číslo pro všechny nesedělo. Výchozí jsou
+   * 2 minuty; dolní mez je 1, aby z toho nešlo udělat tlučení bez pauzy.
    */
-  const ODMLKA_MS = 10 * 60 * 1000;
+  const ODMLKA_MIN = 2;
+  const odmlkaMs = () => Math.max(1, Math.round(+cfg().atkOdmlka || ODMLKA_MIN)) * 60000;
 
   /* Kolik chyb po sobě, než se automatika sama vypne (jako u pokeru). */
   const MAX_SELHANI = 5;
@@ -505,9 +511,10 @@
        * že ji uživatel po hodině najde vypnutou bez příčiny.
        */
       if (/nikdo v úrovni|nenašel se žádný|nešel napadnout nikdo/.test(zprava)) {
-        tichoDo = Date.now() + ODMLKA_MS;
+        const odmlka = odmlkaMs();
+        tichoDo = Date.now() + odmlka;
         NS.gym.setStatus('boj: ' + zprava + ' – zkusím za '
-          + Math.round(ODMLKA_MS / 60000) + ' min', true);
+          + Math.round(odmlka / 60000) + ' min', true);
         return false;
       }
 
@@ -665,6 +672,7 @@
     zautoc, buttons,
     // pro testy a diagnostiku
     S, ENERGIE_UTOK, KANDIDATU, VYSLEDKY, DRUHY, MAX_SELHANI, SELHANI_VYCHLADNE_MS,
+    ODMLKA_MIN, odmlkaMs,
     PODIL_RUCNE, PODIL_AUTO, podilRucne, podilAuto, minUroven,
     autoSet, autoOn, autoTick, autoBox, pocty, duvodCekani,
     /*

@@ -700,6 +700,40 @@ function uklid() {
       || /NEPOUŽÍVÁ/.test(src));
   }
 
+  console.log('\n[odmlka] když není koho, čeká se podle nastavení');
+  {
+    const src = fs.readFileSync(path.join(EXT, 'src/attack.js'), 'utf8');
+    const radek = (src.match(/const odmlkaMs = [^\n]+/) || [''])[0];
+    ok('odmlka se bere z nastavení, ne z konstanty', /cfg\(\)\.atkOdmlka/.test(radek));
+    ok('a napevno zadaná ODMLKA_MS je pryč', !/ODMLKA_MS/.test(src));
+
+    const odmlkaMs = v => new Function('C',
+      'const cfg=()=>C; const ODMLKA_MIN=2; ' + radek + ' return odmlkaMs();')({ atkOdmlka: v });
+    const min = 60000;
+    eq('výchozí jsou 2 minuty', odmlkaMs(undefined), 2 * min);
+    eq('nastavená hodnota platí', odmlkaMs(5), 5 * min);
+    /*
+     * Dolní mez je to podstatné: bez ní by nula nebo záporné číslo z pole
+     * udělaly z odmlky tlučení bez pauzy – a hustý sled hledání je přesně to,
+     * na co hra reaguje captchou.
+     */
+    eq('nula padá na výchozí, ne na žádnou pauzu', odmlkaMs(0), 2 * min);
+    eq('záporná se ořízne na minutu', odmlkaMs(-3), 1 * min);
+    eq('zlomek pod minutu taky', odmlkaMs(0.4), 1 * min);
+    eq('řetězec z inputu se převede', odmlkaMs('7'), 7 * min);
+
+    /* volba musí projít celým řetězcem, jinak ji uživatel nenastaví */
+    const store = fs.readFileSync(path.join(EXT, 'src/store.js'), 'utf8');
+    const html = fs.readFileSync(path.join(EXT, 'popup.html'), 'utf8');
+    const pop = fs.readFileSync(path.join(EXT, 'popup.js'), 'utf8');
+    ok('úložiště má výchozí hodnotu', /atkOdmlka:\s*2,/.test(store));
+    ok('popup má pole', /id="atkOdmlka"/.test(html));
+    ok('pole nedovolí míň než minutu',
+      /min="1"/.test((html.match(/<input[^>]*id="atkOdmlka"[^>]*>/) || [''])[0]));
+    ok('popup hodnotu načítá', /\$\('atkOdmlka'\)\.value = cfg\.read\.atkOdmlka/.test(pop));
+    ok('a ukládá s dolní mezí', /atkOdmlka: Math\.max\(1,/.test(pop));
+  }
+
   console.log(fails ? `\n✗ ${fails} kontrol selhalo` : '\n✓ vše prošlo');
   process.exit(fails ? 1 : 0);
 })();

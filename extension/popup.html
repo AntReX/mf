@@ -312,11 +312,15 @@
     <label class="row"><span class="lbl">Strop úrovně – <b>automatika</b> (% tvé)</span><input type="number" id="atkPodilAuto" min="1" max="100" step="5"></label>
     <label class="row"><span class="lbl">Nechat aspoň (rezerva energie)</span><input type="number" id="atkRezerva" min="0" step="10"></label>
     <label class="row"><span class="lbl">Nejmenší mezera mezi útoky (s)</span><input type="number" id="atkPauza" min="5" step="15"></label>
+    <label class="row"><span class="lbl">Odmlka, když není koho napadnout (min)</span><input type="number" id="atkOdmlka" min="1" step="1"></label>
     <div class="hint">
       Jeden útok stojí <b>30 energie</b> a energie se dobíjí ~<b>10 za minutu</b> (naměřeno),
       takže strop je asi <b>20 útoků za hodinu</b> – tempo drží energie, ne časovač. Pauza je
       proti tomu, aby se při plné energii nevystřílely tři útoky za sebou; hustý sled kliků je
       přesně to, na co hra reaguje <b>captchou</b>.<br><br>
+      <b>Odmlka</b> se použije, když hledání nikoho nenajde. Není to porucha, jen zrovna
+      není koho, takže se automatika nevypne – jen chvíli počká a zkusí to znovu. Jak rychle
+      se seznam obmění, závisí na serveru i na tom, jak úzko máš nastavený strop úrovně.<br><br>
       <b>Minimální úroveň</b> platí pro ruku i automatiku – úplní začátečníci nedávají
       zkušenosti ani peníze, takže je útok jen spálená energie. Když je minimum nad stropem,
       neútočí to a řekne, že si nastavení odporuje.<br><br>

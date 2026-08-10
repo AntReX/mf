@@ -252,6 +252,7 @@
     $('atkPodilAuto').value = cfg.read.atkPodilAuto ?? 50;
     $('atkRezerva').value = cfg.read.atkRezerva ?? 0;
     $('atkPauza').value = cfg.read.atkPauza ?? 60;
+    $('atkOdmlka').value = cfg.read.atkOdmlka ?? 2;
     $('pkVzorku').value = cfg.read.pkVzorku ?? 3000;
     $('pkLoop').checked = cfg.read.pkLoop !== false;
     const pl = cfg.pkLog || {};
@@ -521,6 +522,8 @@
       atkPodilAuto: Math.max(1, Math.min(100, Math.round(+$('atkPodilAuto').value || 50))),
       atkRezerva: Math.max(0, Math.round(+$('atkRezerva').value || 0)),
       atkPauza: Math.max(5, Math.round(+$('atkPauza').value || 60)),
+      /* dolní mez 1 min – aby z odmlky nešlo udělat tlučení bez pauzy */
+      atkOdmlka: Math.max(1, Math.round(+$('atkOdmlka').value || 2)),
       pkMereni: $('pkMereni').checked,
       /*
        * Ante ke střídání se čistí až tady: v poker.js by se špatný zápis

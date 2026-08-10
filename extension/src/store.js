@@ -439,6 +439,13 @@
     atkMinUroven: 0,
     atkRezerva: 0,           // energie, kterou automatika nechá na jiné věci
     atkPauza: 60,            // nejmenší mezera mezi útoky automatiky (s)
+    /*
+     * Odmlka po prázdném seznamu (min). „Nikdo do úrovně X“ není porucha, jen
+     * zrovna není koho – zkoušet to pořád dokola by jen tlouklo do hledání.
+     * Bylo natvrdo 10 minut; teď se dá nastavit, protože jak rychle se seznam
+     * obmění, závisí na serveru a na tom, jak úzko máš nastavený strop úrovně.
+     */
+    atkOdmlka: 2,
     atkDruh: 'not-active',   // co automatika hledá (not-active / not-active-gang)
 
     /*
