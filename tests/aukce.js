@@ -270,11 +270,23 @@ function uklid() {
     const it = polozka('666', '1000', 60);
     A.scan();
     const tlacitka = [...it.querySelectorAll('.cmc-bid-btn')].map(b => b.textContent);
-    ok('žádné „+1“ (' + tlacitka.join(' ') + ')', !tlacitka.includes('+1'));
-    /* +1 % by hra odmítla (minimum je 2 %), takže tam nemá co dělat */
-    ok('ani „+1 %“', !tlacitka.includes('+1 %'));
-    ok('minimum +2 % tam je', tlacitka.includes('+2 %'));
+    ok('žádné „+1“ Kč (' + tlacitka.join(' ') + ')', !tlacitka.includes('+1'));
+    /*
+     * !!! +1 % JE RUČNÍ VOLBA, NE MINIMUM AUTOMATIKY !!!
+     * Dřív tu stálo, že +1 % tlačítko být nesmí, protože hra pod 2 % odmítá.
+     * To platí pro HLÍDKU, která musí projít napoprvé – ručně si člověk vidí na
+     * cenu i na to, jestli příhoz prošel, a menší krok se hodí, když nechce
+     * cenu zbytečně vyhnat. Tohle je vědomé rozhodnutí, ne opomenutí.
+     */
+    ok('+1 % je k dispozici ručně', tlacitka.includes('+1 %'));
+    ok('+2 % tam je (příhoz automatiky)', tlacitka.includes('+2 %'));
     ok('a +5 % zůstalo', tlacitka.includes('+5 %'));
+    /*
+     * Vložit přesně nejvyšší sázku nemá smysl: takovou nabídku hra nepřijme,
+     * protože přebít se musí nahoru. Bylo to jen kliknutí navíc.
+     */
+    ok('tlačítko se stejnou částkou zmizelo',
+      !tlacitka.some(t => /^[\d\s.,]+$/.test(t)));
     const strop = it.querySelector('.cmc-bid-strop');
     ok('pole na strop existuje', !!strop);
 
@@ -293,7 +305,8 @@ function uklid() {
     ok('nepíše „NESAHAT“ jako platné pravidlo', !/na tlačítko [^\n]*nikdy nesahá/.test(src));
     ok('a přiznává, že umí přihodit sama', /umí přihodit sama/.test(src));
     ok('interval je 30 s', /KONTROLA_MS = 30000/.test(src));
-    ok('minimum je 2 %, ne koruna', /PRIHOZ_PCT = 2/.test(src) && !/PRIHOZ = 1;/.test(src));
+    ok('automatika přihazuje 2 %, ne korunu',
+      /PRIHOZ_PCT = 2/.test(src) && !/PRIHOZ = 1;/.test(src));
     ok('okno jsou 3 minuty', /OKNO_MS = 3 \* 60 \* 1000/.test(src));
   }
 

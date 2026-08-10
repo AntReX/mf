@@ -51,11 +51,14 @@
    */
   const OKNO_MS = 3 * 60 * 1000;
   /*
-   * !!! MINIMÁLNÍ PŘEBITÍ JE 2 % Z ČÁSTKY, NE KORUNA !!!
-   * Dřív tu bylo `+1` s odůvodněním „z pravidel plyne, že stačí o korunu víc“.
-   * To byl odhad z textu pravidel („předmět získá ten, kdo vsadí nejvíc“) a byl
-   * špatný – hra vyžaduje o 2 % vyšší nabídku. Nižší příhoz neprojde, takže by
-   * hlídka klikala naprázdno až do konce dražby.
+   * !!! TOHLE JE PŘÍHOZ AUTOMATIKY, NE STROP RUČNÍCH TLAČÍTEK !!!
+   * Hlídka přihazuje o 2 %, aby jí příhoz spolehlivě prošel. Dřív tu bylo `+1`
+   * s odůvodněním „z pravidel plyne, že stačí o korunu víc“ – to byl odhad
+   * z textu pravidel („předmět získá ten, kdo vsadí nejvíc“) a hlídka s ním
+   * klikala naprázdno.
+   *
+   * Ruční lišta má vedle +2 % i +1 %: tam si člověk vidí na cenu i na to, jestli
+   * příhoz prošel, a menší krok se hodí, když nechce cenu zbytečně vyhnat.
    *
    * Zaokrouhluje se NAHORU a na celé koruny: pole má sice step 0.01, ale
    * s haléři se tady už jednou ztrácely peníze (viz upgrade.js).
@@ -175,17 +178,19 @@
     const id = lotId(item);
 
     bar.appendChild(document.createTextNode('vložit:'));
-    bar.appendChild(button(F.num(bid), 'stejná částka jako nejvyšší sázka (' + F.kc(bid) + ')',
-      () => fill(input, bid)));
     /*
-     * „+1“ tady bylo, ale zrušené je záměrně: minimální přebití dělá hlídka sama
-     * a ručně je užitečnější rezerva proti dalšímu přihazujícímu.
+     * !!! TLAČÍTKO SE STEJNOU ČÁSTKOU TU NENÍ ZÁMĚRNĚ !!!
+     * Vložit přesně nejvyšší sázku nemá smysl: takovou nabídku hra nepřijme,
+     * protože přebít se musí nahoru. Bylo to jen o kliknutí navíc před ruční
+     * úpravou čísla.
+     *
+     * !!! +1 % JE RUČNÍ VOLBA, AUTOMATIKA JEDE NA +2 % !!!
+     * `PRIHOZ_PCT` (2 %) je hodnota pro hlídku, aby její příhoz spolehlivě
+     * prošel. Ručně si člověk může zvolit i menší krok, proto je tu i +1 %.
      */
-    /*
-     * +2 % je MINIMUM, které hra přijme – proto je tu místo dřívějšího +1 %,
-     * které by odmítla.
-     */
-    bar.appendChild(button('+2 %', 'minimum, které hra přijme ('
+    bar.appendChild(button('+1 %', 'nejmenší krok (' + F.kc(Math.ceil(bid * 1.01)) + ')',
+      () => fill(input, Math.ceil(bid * 1.01))));
+    bar.appendChild(button('+2 %', 'stejný příhoz, jaký dělá automatika ('
       + F.kc(prihozZ(bid)) + ')', () => fill(input, prihozZ(bid))));
     bar.appendChild(button('+5 %', '+5 % (' + F.kc(bid * 1.05) + ')', () => fill(input, Math.ceil(bid * 1.05))));
 
