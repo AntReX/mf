@@ -439,10 +439,22 @@
 
   /* Kolik chyb po sobě, než se automatika sama vypne (jako u pokeru). */
   const MAX_SELHANI = 5;
+  /*
+   * !!! „PO SOBĚ“ MUSÍ ZNAMENAT I „KRÁTCE PO SOBĚ“ !!!
+   * Počítadlo se nulovalo jedině úspěšným útokem. Pět chyb rozprostřených třeba
+   * přes celé odpoledne – pokaždé jiná drobnost – tak automatiku vyplo úplně
+   * stejně jako pět chyb za minutu, jenže bez zjevné příčiny: uživatel ji pak
+   * najde vypnutou a netuší proč.
+   *
+   * Série se proto po téhle době ticha zapomíná. Skutečná porucha se projeví
+   * hned za sebou a vypnutí spustí; ojedinělé zakolísání ne.
+   */
+  const SELHANI_VYCHLADNE_MS = 30 * 60 * 1000;
 
   let posledniUtok = 0;
   let tichoDo = 0;
   let selhani = 0;
+  let posledniSelhani = 0;
   let bezi = false;
   const pocty = { utoku: 0, vyher: 0, proher: 0, preskoku: 0 };
 
@@ -475,6 +487,7 @@
       const r = await zautoc(druhAuto(), podilAuto());
       posledniUtok = Date.now();
       selhani = 0;
+      posledniSelhani = 0;
       pocty.utoku++;
       if (r.vysledek === 'vyhrál jsi') pocty.vyher++;
       else if (r.vysledek === 'prohrál jsi') pocty.proher++;
@@ -504,6 +517,11 @@
         return false;
       }
 
+      // série starší než SELHANI_VYCHLADNE_MS se nepočítá – viz konstanta
+      if (posledniSelhani && Date.now() - posledniSelhani > SELHANI_VYCHLADNE_MS) {
+        selhani = 0;
+      }
+      posledniSelhani = Date.now();
       selhani++;
       if (selhani >= MAX_SELHANI) {
         await NS.store.patch('read', { atkAuto: false });
@@ -517,6 +535,38 @@
     } finally {
       bezi = false;
     }
+  }
+
+  /**
+   * Proč automatika PRÁVĚ neútočí. `null` = nic jí nebrání.
+   *
+   * !!! TICHÉ ČEKÁNÍ VYPADÁ JAKO PORUCHA !!!
+   * `autoTick` se v půlce případů ukončí bez jediného slova – čeká na energii,
+   * na pauzu mezi útoky nebo na konec odmlky, když nebylo koho napadnout. Zvenčí
+   * je to k nerozeznání od rozbité automatiky a přesně tak to vypadalo:
+   * „spouští se podle nálady“.
+   *
+   * Počítá se ze stavu, ne z toho, co si `autoTick` naposled zapamatoval –
+   * tím pádem je údaj v liště správný i mezi jeho běhy.
+   */
+  function duvodCekani() {
+    if (!autoSet()) return null;
+    if (cfg().autoPaused === true) return 'pozastaveno';
+    if (NS.jail && NS.jail.blocked()) return 'vězení';
+    if (captcha()) return 'captcha';
+
+    const ted = Date.now();
+    if (ted < tichoDo) {
+      return 'nikdo k napadení, zkusím za ' + Math.ceil((tichoDo - ted) / 60000) + ' min';
+    }
+    const doPauzy = pauzaMs() - (ted - posledniUtok);
+    if (doPauzy > 0) return 'další za ' + Math.ceil(doPauzy / 1000) + ' s';
+
+    const e = energie();
+    const potreba = ENERGIE_UTOK + rezerva();
+    if (e != null && e < potreba) return 'čeká na energii ' + e + '/' + potreba;
+    if (selhani > 0) return 'po chybě (' + selhani + '/' + MAX_SELHANI + ')';
+    return null;
   }
 
   /** Zaškrtávátko automatiky do lišty – stejné jako u ostatních modulů. */
@@ -593,12 +643,16 @@
 
     const stav = document.createElement('span');
     stav.className = 'cmc-gym-unit-label';
+    const ceka = duvodCekani();
     stav.textContent = (posledni
       ? 'naposled ' + posledni.jmeno + ': ' + (posledni.vysledek || '?')
       : 'energie ' + (e == null ? '?' : e) + ' · úr. ' + (minUroven() || 1)
         + '–' + (max == null ? '?' : max))
-      + (pocty.utoku ? ' · auto ' + pocty.vyher + '/' + pocty.utoku : '');
-    stav.title = posledni && posledni.zprava ? posledni.zprava : '';
+      + (pocty.utoku ? ' · auto ' + pocty.vyher + '/' + pocty.utoku : '')
+      /* důvod čekání až nakonec – je to doplněk, ne hlavní údaj */
+      + (ceka ? ' · ' + ceka : '');
+    stav.title = (ceka ? 'Automatika čeká: ' + ceka + '. ' : '')
+      + (posledni && posledni.zprava ? posledni.zprava : '');
 
     return [
       tlacitko('not-active', '🔪 Neaktivního'),
@@ -610,16 +664,16 @@
   NS.attack = {
     zautoc, buttons,
     // pro testy a diagnostiku
-    S, ENERGIE_UTOK, KANDIDATU, VYSLEDKY, DRUHY,
+    S, ENERGIE_UTOK, KANDIDATU, VYSLEDKY, DRUHY, MAX_SELHANI, SELHANI_VYCHLADNE_MS,
     PODIL_RUCNE, PODIL_AUTO, podilRucne, podilAuto, minUroven,
-    autoSet, autoOn, autoTick, autoBox, pocty,
+    autoSet, autoOn, autoTick, autoBox, pocty, duvodCekani,
     /*
      * Jen pro testy: stav automatiky (kdy byl poslední útok, odmlka, počítadlo
      * chyb) je záměrně v modulu, ne v úložišti – po obnovení stránky má začínat
      * načisto. Test ale potřebuje jednotlivá kola oddělit, jinak by mu odmlka
      * z jednoho případu zhasla všechny další.
      */
-    __reset() { posledniUtok = 0; tichoDo = 0; selhani = 0; bezi = false;
+    __reset() { posledniUtok = 0; tichoDo = 0; selhani = 0; posledniSelhani = 0; bezi = false;
       pocty.utoku = 0; pocty.vyher = 0; pocty.proher = 0; pocty.preskoku = 0; },
     soupeR, vysledekScenz, najdiNeaktivni, otevriScenu, otevriHledani, zavri, strop, mujLevel,
     get posledni() { return posledni; }
