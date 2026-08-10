@@ -1288,27 +1288,23 @@ a.cmc-atk-offscreen { position: absolute !important; left: -9999px !important; t
 
 /* ---- ★ oblíbené předměty --------------------------------------------------- */
 /*
- * Hvězdička sedí v rohu karty, ne u akcí „nasadit/prodat/do aukce“ – tam by se
- * s nimi pletla a omylem se klikne na prodej.
- */
-/*
- * Pravý DOLNÍ kout – vlevo nahoře má hra rank a vzácnost.
+ * !!! VLEVO UPROSTŘED, NE V ROHU !!!
+ * Hvězdička postupně vystřídala pravý dolní roh i pás nad staty a pokaždé se
+ * o něco otřela. Změřená karta (206 × 290 px) má obsazené prakticky všechny
+ * kouty:
+ *   vlevo nahoře    `.col-card-badge` – rank a vzácnost
+ *   vpravo nahoře   `.acts` – nasadit / vylepšit / PRODAT / do aukce
+ *   úplně dole      `.col-card-stats` – atk · def · spd
  *
- * !!! ALE NE ÚPLNĚ DOLE !!!
- * Změřená karta (206 × 290 px):
- *   vlevo nahoře    `.col-card-badge` – rank + vzácnost
- *   vpravo nahoře   `.acts` – nasadit / vylepšit / PRODAT / do aukce,
- *                   svislý pruh, končí 134 px nad spodkem
- *   úplně dole      `.col-card-stats` – atk · def · spd; „spd“ končí 10 px
- *                   od pravého okraje a 8 px nad spodkem
- * Doslovný `bottom: 4px` by tedy hvězdičku položil NA číslo rychlosti. Sedí
- * proto 32 px nad spodkem: pod pruhem akcí (aby se nepletla s prodejem)
- * a nad staty (aby je nezakrývala).
+ * Volný je LEVÝ BOK v polovině výšky: badge končí nad ním, staty začínají pod
+ * ním a pruh akcí je na druhé straně. K akcím se tím navíc nedostane zdaleka,
+ * takže nehrozí, že si někdo omylem klikne na prodej.
  */
 .cmc-fav {
   position: absolute;
-  right: 4px;
-  bottom: 32px;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 5;
   width: 22px;
   height: 22px;

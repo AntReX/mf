@@ -182,7 +182,14 @@
    * .inventory-action-modal .upgrade`, takže na tlačítko mimo tyhle obaly
    * nezareaguje. (Tohle stálo jeden pokus.)
    */
-  async function vylepsi(id) {
+  /**
+   * Jedno běžné vylepšení.
+   *
+   * `volby.minZustatek` je hranice, pod kterou nesmí špinavé peníze po zaplacení
+   * klesnout. Kontroluje se TADY, protože stav (a s ním cena) se tu už načítá –
+   * volající by kvůli tomu musel dělat druhý dotaz do hry na každý pokus.
+   */
+  async function vylepsi(id, volby) {
     if (NS.captcha && NS.captcha.blokuje()) throw new Error('hra ukazuje captchu');
     if (NS.jail && NS.jail.blocked()) throw new Error('jsi ve vězení/nemocnici');
 
@@ -191,6 +198,12 @@
     const mam = spinave();
     if (pred.cena.spinave != null && mam != null && mam < pred.cena.spinave) {
       throw new Error('chybí špinavé peníze (' + NS.fmt.kc(pred.cena.spinave) + ')');
+    }
+    const dno = volby && volby.minZustatek;
+    if (dno != null && pred.cena.spinave != null && mam != null
+        && mam - pred.cena.spinave < dno) {
+      throw new Error('další vylepšení (' + NS.fmt.kc(pred.cena.spinave)
+        + ') by srazilo špinavé pod hranici ' + NS.fmt.kc(dno));
     }
 
     const host = NS.gym.gameHost();
@@ -288,16 +301,55 @@
     + ' vylepšení; Turbo za diamanty se nepoužívá. Automatika tu záměrně není,'
     + ' dokud nevíme, co přesně vylepšení spotřebuje.';
 
+  /*
+   * !!! ČISTÝ DEBOUNCE NA OBSERVERU NESTAČÍ !!!
+   * Původně tu byl jen `MutationObserver` s `setTimeout(scan, 300)`, který se
+   * při každé další mutaci resetoval. Má to dvě děravá místa a hvězdička kvůli
+   * nim v inventáři vůbec nebyla:
+   *
+   *   1. Když mutace chodí častěji než každých 300 ms (hra má odpočet, chat
+   *      i animace), timeout se resetuje pořád a `scan` se nespustí NIKDY.
+   *   2. Když observer podnět z nějakého důvodu nedostane, není co ho zachrání.
+   *
+   * Změřeno na živé hře: 10 karet `.col[data-item-id]` v DOM, `data-cmc-fav`
+   * nenastavený, žádná `.cmc-fav` – `ozdob()` se ke kartě nikdy nedostal.
+   * Ručně vložená hvězdička přitom sedí správně a nikdo ji neodstraňuje, takže
+   * chyba nebyla ve značce ani ve stylu, ale ve spouštění.
+   *
+   * Proto: debounce má STROP (po `MAX_CEKANI` se skenuje bez ohledu na další
+   * mutace) a nad tím běží levná pravidelná kontrola jako záloha. `scan()` je
+   * jeden `querySelectorAll` a označené karty přeskakuje podle `data-cmc-fav`,
+   * takže se nic nedělá dvakrát.
+   */
+  const DEBOUNCE_MS = 250;
+  const MAX_CEKANI_MS = 1000;
+  const ZALOHA_MS = 2000;
+
   function start() {
-    scan();
+    let planovano = null, prvniPodnet = 0;
+
+    const skenuj = () => {
+      clearTimeout(planovano);
+      planovano = null;
+      prvniPodnet = 0;
+      scan();
+    };
+
     const obs = new MutationObserver(() => {
-      clearTimeout(start._t);
-      start._t = setTimeout(scan, 300);
+      const teď = Date.now();
+      if (!prvniPodnet) prvniPodnet = teď;
+      // strop: od prvního podnětu se čeká nejdéle MAX_CEKANI_MS
+      if (teď - prvniPodnet >= MAX_CEKANI_MS) return skenuj();
+      clearTimeout(planovano);
+      planovano = setTimeout(skenuj, DEBOUNCE_MS);
     });
     obs.observe(document.body, { childList: true, subtree: true });
+
+    setInterval(scan, ZALOHA_MS);
+    scan();
   }
 
-  NS.oblibene = { start, scan, stav, vylepsi, buttons, jeOblibeny, prepni,
+  NS.oblibene = { start, scan, stav, vylepsi, buttons, jeOblibeny, prepni, spinave,
     POPIS_SKUPINY, get posledni() { return posledni; },
     __cache: cache };
 })();

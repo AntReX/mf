@@ -240,16 +240,29 @@ function uklid() {
     ok('odznak vzácnosti je pořád na místě', !!k.querySelector('.col-card-badge .rank'));
 
     /*
-     * Umístění: vlevo nahoře má hra rank, vpravo nahoře pruh akcí (včetně
-     * PRODEJE) a úplně dole staty. Hvězdička patří do pravého dolního kouta,
-     * ale NAD staty – doslovný `bottom: 4px` by ležel na čísle rychlosti.
+     * Umístění: LEVÝ BOK V POLOVINĚ VÝŠKY.
+     *
+     * Rohy jsou obsazené – vlevo nahoře rank a vzácnost, vpravo nahoře pruh akcí
+     * (včetně PRODEJE), dole staty – a hvězdička se v pravém dolním koutu, kde
+     * dřív seděla, o něco pořád otírala. Volný je levý bok v polovině výšky.
+     *
+     * Změřeno na skutečné kartě 191 × 269 v běžící hře: hvězdička na (4, 123)
+     * nekoliduje s `col-card-badge` (15,15,31×34), s `acts` (155,4,32×154)
+     * ani s `col-card-stats` (6,241,179×22).
      */
     const pravidlo = (css.match(/\.cmc-fav \{[^}]*\}/) || [''])[0];
-    ok('je vpravo', /right:\s*\d+px/.test(pravidlo) && !/left:\s*\d+px/.test(pravidlo));
-    ok('a dole', /bottom:\s*\d+px/.test(pravidlo) && !/top:\s*\d+px/.test(pravidlo));
-    const odspodu = +(pravidlo.match(/bottom:\s*(\d+)px/) || [0, 0])[1];
-    ok('ale nad pruhem statů (' + odspodu + ' px > 27)', odspodu > 27);
-    ok('a ne tak vysoko, aby lezla do akcí (' + odspodu + ' px < 130)', odspodu < 130);
+    ok('je vlevo', /left:\s*\d+px/.test(pravidlo) && !/right:\s*\d+px/.test(pravidlo));
+    ok('a svisle na středu', /top:\s*50%/.test(pravidlo)
+      && /transform:\s*translateY\(-50%\)/.test(pravidlo));
+    ok('nekotví se ke spodku (tam jsou staty)', !/bottom:\s*\d+px/.test(pravidlo));
+    const odleva = +(pravidlo.match(/left:\s*(\d+)px/) || [0, 99])[1];
+    ok('drží se při kraji (' + odleva + ' px < 16)', odleva < 16);
+    /*
+     * Pruh akcí je na PROTĚJŠÍ straně karty – tohle je hlavní důvod přesunu,
+     * takže se hlídá zvlášť: omylem kliknout na prodej nesmí jít.
+     */
+    const acts = (css.match(/\.acts \{[^}]*\}/) || [''])[0];
+    ok('a akce jsou na druhé straně', !/left:\s*\d+px/.test(acts));
   }
 
   console.log('\n[zdroj] Turbo se nesmí objevit jako akce');

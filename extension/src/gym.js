@@ -568,10 +568,43 @@
   /** Povolené akce automatiky = všechno, co lišta umí (posilovna i kasárna). */
   const AUTO_ALLOWED = GROUPS.flatMap(g => g.items.map(i => i.key));
 
+  /*
+   * !!! OBLÍBENÝ PŘEDMĚT JE TAKY VOLBA AUTOMATIKY !!!
+   * Klíč má tvar `fav:<item-id>`. Seznam se nedá zapéct do `AUTO_ALLOWED`,
+   * protože se mění podle toho, co má člověk označené hvězdičkou v inventáři –
+   * proto se povolení ptá funkce, ne pole.
+   *
+   * !!! NENÍ TO TRÉNINK A NEŘÍDÍ SE ENERGIÍ !!!
+   * Trénink platí energií a štěstím, vylepšení předmětu penězi. Dávka pro `fav:`
+   * proto energii ani štěstí nekontroluje – zastaví ji až `vylepsi()`, které si
+   * hlídá špinavé peníze, vězení i captchu, nebo odmítnutí ze strany hry.
+   */
+  const FAV = 'fav:';
+  const jeFav = k => typeof k === 'string' && k.startsWith(FAV);
+  const favId = k => k.slice(FAV.length);
+  const favSeznam = () => {
+    const db = (NS.store.get().oblibene) || {};
+    /*
+     * !!! ŘADIT PODLE NÁZVU, NE PODLE POŘADÍ V OBJEKTU !!!
+     * Klíče jsou ID předmětů, tedy čísla v podobě řetězce – a ty JavaScript
+     * v objektu řadí VZESTUPNĚ NUMERICKY, ne podle toho, kdy se vložily.
+     * Odhalil to test: „99“ vyšlo před „161599“, i když bylo přidané později.
+     * V nabídce by tím vznikalo pořadí, které pro člověka nedává smysl.
+     */
+    return Object.entries(db)
+      .map(([id, z]) => ({
+        key: FAV + id,
+        label: '★ ' + ((z && z.nazev) || ('předmět ' + id))
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'cs'));
+  };
+  const autoPovoleno = k => AUTO_ALLOWED.includes(k)
+    || (jeFav(k) && !!((NS.store.get().oblibene || {})[favId(k)]));
+
   /** Co je NASTAVENÉ (bez ohledu na hlavní vypínač). */
   function autoSetting() {
     const k = NS.store.get().read.autoTrain;
-    return k && AUTO_ALLOWED.includes(k) ? k : null;
+    return k && autoPovoleno(k) ? k : null;
   }
 
   /**
@@ -608,6 +641,10 @@
       const i = g.items.find(x => x.key === key);
       if (i) return i.label;
     }
+    if (jeFav(key)) {
+      const z = (NS.store.get().oblibene || {})[favId(key)];
+      return '★ ' + ((z && z.nazev) || ('předmět ' + favId(key)));
+    }
     return key;
   };
 
@@ -620,6 +657,91 @@
   }
 
   /**
+   * Dávka pro OBLÍBENÝ PŘEDMĚT – vylepšuje, dokud to jde.
+   *
+   * !!! ŽÁDNÁ KONTROLA ENERGIE ANI ŠTĚSTÍ !!!
+   * Vylepšení předmětu se platí penězi, ne energií, takže podmínky tréninku by
+   * tu byly nesmysl: buď by dávku zastavily zbytečně, nebo by ji pustily podle
+   * čísla, které s cenou nesouvisí.
+   *
+   * !!! ZASTAVIT JI MUSÍ CHYBA, NE ODHAD !!!
+   * Zdrojů se tu nedopočítáváme. `vylepsi()` si samo hlídá špinavé peníze,
+   * vězení i captchu a po kliknutí OVĚŘUJE, že úroveň nebo kvalita opravdu
+   * stoupla – když ne, vyhodí chybu. Cokoli z toho dávku ukončí. Turbo za
+   * diamanty se nepoužívá nikdy (viz oblibene.js).
+   */
+  async function favBurst(key) {
+    const id = favId(key);
+    const cfg = NS.store.get().read;
+    const gap = Math.max(200, cfg.autoTrainGap || 1000);
+
+    /*
+     * !!! DNO SE DĚDÍ Z TRÉNINKU, ALE MĚŘÍ SE V PENĚZÍCH !!!
+     * Trénink má „jeď, dokud energie neklesne na 70 %“. Vylepšení předmětu se
+     * platí ŠPINAVÝMI PENĚZI, a ty žádné maximum nemají, takže procento
+     * z „plna“ neexistuje. Bere se proto stejné číslo (`autoTrainFloor`) jako
+     * podíl STAVU NA ZAČÁTKU DÁVKY: při 70 % smí dávka utratit nejvýš 30 % toho,
+     * co jsi měl, když se rozjela.
+     *
+     * Díky tomu se nastavení chová „přibližně stejně“ jako u tréninku – jedno
+     * číslo, stejný smysl (kolik si nechat) – a zároveň nemůže vysát účet.
+     *
+     * Hranice se počítá JEDNOU na začátku, ne průběžně: kdyby se přepočítávala
+     * z aktuálního zůstatku, posouvala by se dolů s každým nákupem a dávka by
+     * se nezastavila nikdy (Zenónův paradox).
+     */
+    const podil = Math.max(0, Math.min(99, cfg.autoTrainFloor ?? 70)) / 100;
+    const zacatek = NS.oblibene.spinave();
+    const dno = zacatek != null ? Math.floor(zacatek * podil) : null;
+
+    let hotovo = 0, utraceno = 0;
+    const shrnuti = duvod => 'auto ' + itemLabel(key) + ': ' + hotovo + '×'
+      + (utraceno ? ' za ' + NS.fmt.kc(utraceno) : '')
+      + (duvod ? ' (' + duvod + ')' : ' hotovo');
+
+    try {
+      if (dno != null) {
+        setStatus('auto ' + itemLabel(key) + ': nechám si ' + NS.fmt.kc(dno)
+          + ' (' + Math.round(podil * 100) + ' %)');
+      }
+      while (!autoStop && hotovo < AUTO_MAX_BURST && autoKey() === key) {
+        if (NS.jail && NS.jail.blocked()) {
+          setStatus(shrnuti('vězení'), true);
+          return hotovo;
+        }
+        const pred = NS.oblibene.spinave();
+        setStatus('auto ' + itemLabel(key) + ': ' + (hotovo + 1) + '×…');
+        try {
+          /*
+           * Cenu kontroluje `vylepsi()`: stav si stejně načítá, takže hranici
+           * ověří bez dalšího dotazu do hry. Vrací chybu, když by další nákup
+           * srazil špinavé pod `minZustatek` nebo když na něj vůbec nejsou.
+           */
+          await NS.oblibene.vylepsi(id, { minZustatek: dno });
+        } catch (e) {
+          setStatus(shrnuti(e.message), true);
+          return hotovo;
+        }
+        hotovo++;
+        const po = NS.oblibene.spinave();
+        if (pred != null && po != null && po < pred) utraceno += pred - po;
+
+        const odmitnuto = gameRefusal();
+        if (odmitnuto) {
+          setStatus('⚠ auto zastaveno: ' + odmitnuto, true);
+          return hotovo;
+        }
+        await sleep(gap);
+      }
+      setStatus(shrnuti(autoStop ? 'zastaveno' : null));
+      return hotovo;
+    } catch (e) {
+      setStatus('⚠ auto: ' + e.message, true);
+      return hotovo;
+    }
+  }
+
+  /**
    * Dávka: klikat, dokud energie vystačí. Zastaví se na odmítnutí hrou, na
    * stropu dávky, při vypnutí volby nebo tlačítkem Stop.
    */
@@ -628,6 +750,9 @@
     autoRunning = true;
     autoStop = false;
     let hotovo = 0;
+    if (jeFav(key)) {
+      try { return await favBurst(key); } finally { autoRunning = false; collect(); }
+    }
     try {
       const gap = Math.max(200, NS.store.get().read.autoTrainGap || 1000);
       const cena = () => {
@@ -717,6 +842,11 @@
     if (!key || autoRunning || !bar) return;
     if (NS.jail && NS.jail.blocked()) return;   // ve vězení se neklika
     if (Date.now() < autoCooldownUntil) return;   // čeká se na obnovu HUD hrou
+    /*
+     * Oblíbený předmět se nečeká na energii – platí se penězi. Kdyby se na ni
+     * čekalo, dávka by se pouštěla podle čísla, které s cenou nesouvisí.
+     */
+    if (jeFav(key)) return void autoBurst(key);
     const prah = Math.min(100, Math.max(1, NS.store.get().read.autoTrainPct || 100));
     const pct = readEnergyPct();
     if (pct == null || pct < prah) return;
@@ -748,7 +878,17 @@
     wrap.title = (key && pozastaveno ? 'POZASTAVENO hlavním vypínačem – volba zůstává. ' : '')
       + (rezervaZahrad > dno
         ? 'Dno je teď ' + rezervaZahrad + ' % – rezerva energie pro zahrady. ' : '')
-      + (key
+      + (jeFav(key)
+      ? 'Automatické vylepšování je ZAPNUTÉ: „' + itemLabel(key) + '“ se vylepšuje'
+        + ' dokola (max ' + AUTO_MAX_BURST + '× na dávku, prodleva '
+        + Math.max(200, cfg.autoTrainGap || 1000) + ' ms).'
+        + ' PLATÍ SE ŠPINAVÝMI PENĚZI, ne energií. Dno ' + dno + ' % se dědí'
+        + ' z tréninku, ale měří se v penězích: dávka smí utratit nejvýš '
+        + (100 - dno) + ' % toho, co máš při jejím spuštění, a před každým'
+        + ' nákupem se cena kontroluje proti té hranici.'
+        + ' Turbo za diamanty se nepoužívá nikdy.'
+        + ' Přepnutím na „vypnuto“ to hned přestane, ■ zastaví běžící dávku.'
+      : key
       ? 'Automatický trénink je ZAPNUTÝ: při energii ≥ ' + prah + ' % se klikne „'
         + itemLabel(key) + '“, dokud energie neklesne na ' + dno + ' % (max '
         + AUTO_MAX_BURST + '× na dávku, prodleva '
@@ -767,7 +907,9 @@
 
     const sel = document.createElement('select');
     sel.className = 'cmc-gym-auto-select';
-    for (const o of [{ key: '', label: 'vypnuto' }, ...GROUPS.flatMap(g2 => g2.items)]) {
+    /* oblíbené se přidávají až za trénink – patří k nim, ale nejsou to akce posilovny */
+    for (const o of [{ key: '', label: 'vypnuto' },
+      ...GROUPS.flatMap(g2 => g2.items), ...favSeznam()]) {
       const opt = document.createElement('option');
       opt.value = o.key;
       opt.textContent = o.label;
@@ -776,7 +918,7 @@
     }
     sel.addEventListener('change', async () => {
       await NS.store.patch('read', {
-        autoTrain: AUTO_ALLOWED.includes(sel.value) ? sel.value : ''
+        autoTrain: autoPovoleno(sel.value) ? sel.value : ''
       });
       autoStop = true;          // přepnutí zastaví i právě běžící dávku
       collect(true);            // vlastní změna přerender chce, pojistka se obejde
@@ -790,9 +932,21 @@
         pauza.textContent = 'pozastaveno';
         wrap.appendChild(pauza);
       }
+      /*
+       * U předmětu by „100→70 %“ lhalo (energie se neřeší), ale dno samo platí –
+       * jen v penězích. Proto se ukazuje bez prahu a s korunovou částkou, aby
+       * bylo na první pohled vidět, kolik si dávka nechá.
+       */
       const hranice = document.createElement('span');
       hranice.className = 'cmc-gym-auto-label';
-      hranice.textContent = prah + '→' + dno + ' %';
+      if (jeFav(key)) {
+        const mam = NS.oblibene && NS.oblibene.spinave();
+        hranice.textContent = 'nechá ' + dno + ' %'
+          + (mam != null ? ' (' + NS.fmt.kc(Math.floor(mam * dno / 100)) + ')' : '');
+        hranice.title = 'Špinavé peníze, pod které dávka nepůjde.';
+      } else {
+        hranice.textContent = prah + '→' + dno + ' %';
+      }
       wrap.appendChild(hranice);
 
       const stop = document.createElement('button');
