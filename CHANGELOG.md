@@ -6,6 +6,39 @@ Verze se drží v `extension/manifest.json`; nejvyšší číslo tady mu musí o
 Záznamy začínají u 1.13.0 – od starších verzí se nevedly, takže dopisovat je
 zpětně by znamenalo si je domyslet.
 
+## 1.25.0
+
+- **Automatiky od třinácté dál se zahazovaly.** `AUTOMATY` má 14 položek, ale
+  fronta měla strop 12 a tik je nabízí vždy ve stejném pořadí – když průchod
+  trvá déle než tik (u síťových dotazů běžné), fronta se drží plná a všechno od
+  13. položky se zahodí. Tedy přesně „boj“ a „vylepšení“. Změřeno simulací nad
+  kódem fronty, 60 s provozu se 14 automatikami: trénink 12 z 12 spuštění, boj
+  4 z 12, vylepšení 0 z 12. Po zvýšení stropu na 30 běží všechny 6–7 z 12 a nic
+  se nezahazuje. Odpovídalo hlášení „ručně to funguje, automaticky podle nálady“.
+- **Automatika útoků říká, proč nic nedělá.** `autoTick` se v půlce případů
+  ukončil beze slova – čekal na energii, na pauzu mezi útoky nebo na odmlku,
+  když nebylo koho napadnout. Zvenčí k nerozeznání od poruchy. Lišta teď píše
+  `čeká na energii 20/30`, `další za 45 s`, `nikdo k napadení, zkusím za 8 min`.
+- **Série chyb se po půl hodině zapomíná.** Počítadlo se nulovalo jedině
+  úspěšným útokem, takže pět chyb rozprostřených přes odpoledne vyplo automatiku
+  stejně jako pět chyb za minutu – jen bez zjevné příčiny. Skutečná porucha se
+  projeví hned za sebou a vypnutí spustí dál.
+- **★ v inventáři se vůbec nepřidávala.** `MutationObserver` měl debounce
+  `setTimeout(scan, 300)`, který se každou další mutací resetoval; při provozu
+  hry (odpočet, chat, animace) se sken nespustil nikdy. Debounce má teď strop
+  a nad ním běží záložní kontrola. Změřeno na živém inventáři: 10 karet v DOM,
+  `data-cmc-fav` nenastavený, žádná `.cmc-fav`.
+- **★ se přestěhovala na levý bok do poloviny výšky.** V pravém dolním koutu se
+  pořád o něco otírala. Ověřeno na kartě 191 × 269: nekoliduje s `col-card-badge`
+  ani s pruhem akcí (kde je prodej) ani se staty.
+- **Oblíbené předměty jsou volbou automatiky** v selektu u řádku Trénovat, každý
+  zvlášť, řazené abecedně (klíče jsou ID, a ta JavaScript v objektu řadí
+  numericky – v nabídce by z toho bylo nesmyslné pořadí). Vylepšuje se dokola,
+  dno se dědí z tréninku, ale měří se v penězích: při 70 % smí dávka utratit
+  nejvýš 30 % toho, co bylo při jejím spuštění. Turbo za diamanty nikdy.
+- **V aukci je zpátky tlačítko +1 %** vedle +2 % a +5 %; volba „stejná částka“
+  zmizela, protože takovou nabídku hra nepřijme. Automatika dál přihazuje 2 %.
+
 ## 1.24.0
 
 - **Panel ukazuje odchylku za posledních 300 kol**, ne za celou dobu – podle
